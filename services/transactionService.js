@@ -2,13 +2,13 @@ import api from './api';
 import { INITIAL_TRANSACTIONS } from './mockData';
 import { auditService } from './agentService';
 
-let transactionsCache = [...INITIAL_TRANSACTIONS];
+let transactionsCache = [];
 
 export const transactionService = {
   getAll: async () => {
     try {
       const res = await api.get('/transactions');
-      if (res?.data && Array.isArray(res.data) && res.data.length > 0) {
+      if (res && Array.isArray(res.data)) {
         transactionsCache = res.data;
         return res;
       }

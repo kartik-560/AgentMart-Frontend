@@ -1,27 +1,14 @@
 import api from './api';
 import { INITIAL_NEGOTIATION } from './mockData';
 
-let activeNegotiationCache = JSON.parse(JSON.stringify(INITIAL_NEGOTIATION));
-let negotiationsListCache = [
-  {
-    id: activeNegotiationCache.id,
-    title: activeNegotiationCache.title,
-    targetProduct: activeNegotiationCache.targetProduct,
-    targetQuantity: activeNegotiationCache.targetQuantity,
-    maxBudget: activeNegotiationCache.maxBudget,
-    maxDeliveryHours: activeNegotiationCache.maxDeliveryHours,
-    currentRound: activeNegotiationCache.currentRound,
-    status: activeNegotiationCache.status,
-    recommendedOfferId: activeNegotiationCache.recommendedOfferId,
-    createdAt: activeNegotiationCache.createdAt,
-  },
-];
+let activeNegotiationCache = null;
+let negotiationsListCache = [];
 
 export const negotiationService = {
   getAll: async () => {
     try {
       const res = await api.get('/negotiations');
-      if (res?.data && Array.isArray(res.data) && res.data.length > 0) {
+      if (res && Array.isArray(res.data)) {
         negotiationsListCache = res.data;
         return res;
       }

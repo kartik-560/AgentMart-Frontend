@@ -10,6 +10,7 @@ import Card from '../components/shared/Card';
 import { BudgetAllocationBar } from '../components/shared/Charts';
 import { negotiationService } from '../services/negotiationService';
 import { securityService, productService } from '../services/agentService';
+import { transactionService } from '../services/transactionService';
 import { useUI } from '../context/UIContext';
 import { formatINR } from '../utils/formatters';
 import Link from 'next/link';
@@ -30,6 +31,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const { showToast } = useUI();
   const [negotiations, setNegotiations] = useState([]);
+  const [transactions, setTransactions] = useState([]);
   const [alerts, setAlerts] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -45,11 +47,13 @@ export default function DashboardPage() {
     let mounted = true;
     Promise.all([
       negotiationService.getAll().catch(() => ({ data: [] })),
+      transactionService.getAll().catch(() => ({ data: [] })),
       securityService.getAlerts().catch(() => ({ data: [] })),
       productService.getAll().catch(() => ({ data: { products: [] } })),
-    ]).then(([negRes, secRes, prodRes]) => {
+    ]).then(([negRes, txRes, secRes, prodRes]) => {
       if (mounted) {
         setNegotiations(negRes?.data || []);
+        setTransactions(txRes?.data || []);
         setAlerts(secRes?.data || []);
         setProducts(prodRes?.data?.products || []);
         setLoading(false);
@@ -60,6 +64,11 @@ export default function DashboardPage() {
       mounted = false;
     };
   }, []);
+
+  const pendingDeals = transactions.filter((t) => t.settlementStatus === 'PENDING_APPROVAL');
+  const settledTotalSpend = transactions
+    .filter((t) => t.settlementStatus === 'SETTLED')
+    .reduce((acc, t) => acc + Number(t.settlementAmount || 0), 0);
 
   const handleLaunchRfq = async (e) => {
     e.preventDefault();
@@ -74,9 +83,10 @@ export default function DashboardPage() {
         targetResaleMargin: 25,
       });
 
+      const newId = res?.data?.id;
       showToast('Autonomous Multi-Agent RFQ broadcast successfully!', 'success');
       setIsRfqModalOpen(false);
-      router.push('/negotiation');
+      router.push(newId ? `/negotiation?id=${newId}` : '/negotiation');
     } catch {
       showToast('Initialized simulated negotiation session.', 'info');
       setIsRfqModalOpen(false);
@@ -113,11 +123,19 @@ export default function DashboardPage() {
             <PlusCircle className="w-3.5 h-3.5" /> Launch New RFQ
           </Button>
 
-          <Link href="/approvals">
-            <Button variant="success" size="sm" className="gap-1.5 text-xs shadow-emerald-500/20 shadow-md">
-              <ShieldCheck className="w-3.5 h-3.5" /> 1 Deal Pending Approval
-            </Button>
-          </Link>
+          {pendingDeals.length > 0 ? (
+            <Link href={`/approvals?id=${pendingDeals[0].id}`}>
+              <Button variant="success" size="sm" className="gap-1.5 text-xs shadow-emerald-500/20 shadow-md">
+                <ShieldCheck className="w-3.5 h-3.5" /> {pendingDeals.length} Deal{pendingDeals.length > 1 ? 's' : ''} Pending Approval
+              </Button>
+            </Link>
+          ) : (
+            <Link href="/approvals">
+              <Button variant="outline" size="sm" className="gap-1.5 text-xs text-slate-400">
+                <ShieldCheck className="w-3.5 h-3.5" /> 0 Pending Approvals
+              </Button>
+            </Link>
+          )}
         </div>
       </div>
 
@@ -131,7 +149,7 @@ export default function DashboardPage() {
       />
 
       {/* Budget Allocation Progress Bar */}
-      <BudgetAllocationBar currentTotal={44400} budgetCap={50000} />
+      <BudgetAllocationBar currentTotal={settledTotalSpend} budgetCap={50000} />
 
       {/* 2-Column Split: Active Negotiations & Intercepted Threats */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

@@ -161,13 +161,13 @@ function NegotiationRoomContent() {
         <div>
           <div className="flex flex-wrap items-center gap-2.5">
             <span className="px-2.5 py-1 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 font-mono text-xs font-semibold">
-              SESSION: ${negotiation?.id ? negotiation.id.substring(0, 13).toUpperCase() : 'INITIATING'}
+              {negotiation?.id ? `SESSION: ${negotiation.id.substring(0, 13).toUpperCase()}` : 'NEW SESSION'}
             </span>
             <h1 className="text-lg sm:text-xl font-bold text-slate-100 flex items-center gap-2">
               <MessageSquareCode className="w-5 h-5 text-indigo-400 shrink-0" />
-              {negotiation?.title || 'Procurement: 12x Enterprise Wi-Fi 6 Mesh Router'}
+              {negotiation?.title || 'No Active Negotiation - Start from Marketplace'}
             </h1>
-            <StatusBadge status={negotiation?.status || 'PENDING_HUMAN_APPROVAL'} />
+            <StatusBadge status={negotiation?.status || 'INITIATED'} />
           </div>
 
           <div className="flex flex-wrap items-center gap-3 text-xs text-slate-400 mt-2 font-mono">

@@ -52,7 +52,7 @@ export default function ActiveNegotiationsWidget({ negotiations = [] }) {
 
               <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
                 <StatusBadge status={item.status || 'PENDING_HUMAN_APPROVAL'} size="xs" />
-                <Link href="/negotiation">
+                <Link href={`/negotiation?id=${item.id}`}>
                   <Button variant="primary" size="sm" className="text-xs gap-1.5">
                     <Play className="w-3 h-3" /> Live Feed
                   </Button>
