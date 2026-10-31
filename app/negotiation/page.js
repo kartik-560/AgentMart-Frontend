@@ -20,8 +20,10 @@ import { useSocketContext } from '../../context/SocketContext';
 import { useUI } from '../../context/UIContext';
 import { formatINR } from '../../utils/formatters';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import {
   MessageSquareCode,
+  CheckCircle2,
   Play,
   Scale,
   ShieldCheck,
@@ -33,49 +35,71 @@ import {
   Boxes,
 } from 'lucide-react';
 
-export default function NegotiationRoomPage() {
+function NegotiationRoomContent() {
   const { socket, isConnected } = useSocketContext() || {};
   const { showToast } = useUI();
+
+  const searchParams = useSearchParams();
+  const queryId = searchParams.get('id') || searchParams.get('negotiationId');
 
   const [negotiation, setNegotiation] = useState(null);
   const [agents, setAgents] = useState([]);
   const [messages, setMessages] = useState([]);
   const [offers, setOffers] = useState([]);
-  const [currentRound, setCurrentRound] = useState(2);
+  const [currentRound, setCurrentRound] = useState(1);
   const [advancing, setAdvancing] = useState(false);
   const [inspectingAlert, setInspectingAlert] = useState(null);
   const [showFormulaModal, setShowFormulaModal] = useState(false);
 
-  // Load negotiation data and agents
+  // Load negotiation data and agents dynamically
   useEffect(() => {
     let mounted = true;
-    Promise.all([
-      negotiationService.getById('neg-demo-001'),
-      agentService.getAll(),
-    ])
-      .then(([negRes, agentRes]) => {
-        if (mounted && negRes?.data) {
-          setNegotiation(negRes.data);
-          setMessages(negRes.data.messages || []);
-          setOffers(negRes.data.offers || []);
-          setCurrentRound(negRes.data.currentRound || 2);
-        }
-        if (mounted && agentRes?.data) {
-          setAgents(agentRes.data);
-        }
-      })
-      .catch(() => {});
 
+    async function fetchData() {
+      try {
+        let negData = null;
+        if (queryId) {
+          const res = await negotiationService.getById(queryId);
+          negData = res?.data;
+        } else {
+          const listRes = await negotiationService.getAll();
+          if (listRes?.data?.length > 0) {
+            const latest = listRes.data[0];
+            const detailRes = await negotiationService.getById(latest.id);
+            negData = detailRes?.data || latest;
+          } else {
+            const fallback = await negotiationService.getById('neg-demo-001');
+            negData = fallback?.data;
+          }
+        }
+
+        const agentRes = await agentService.getAll();
+
+        if (mounted) {
+          if (negData) {
+            setNegotiation(negData);
+            setMessages(negData.messages || negData.agentMessages || []);
+            setOffers(negData.offers || []);
+            setCurrentRound(negData.currentRound || 1);
+          }
+          if (agentRes?.data) {
+            setAgents(agentRes.data);
+          }
+        }
+      } catch (err) {}
+    }
+
+    fetchData();
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [queryId]);
 
   // Real-time Socket.IO subscriptions
   useEffect(() => {
-    if (!socket) return;
+    if (!socket || !negotiation?.id) return;
 
-    socket.emit('negotiation:join', { negotiationId: 'neg-demo-001' });
+    socket.emit('negotiation:join', { negotiationId: negotiation.id });
 
     function handleIncomingMessage(msg) {
       setMessages((prev) => [...prev, { ...msg, id: `msg-${Date.now()}` }]);
@@ -85,6 +109,7 @@ export default function NegotiationRoomPage() {
     function handleRoundCompleted(data) {
       if (data?.offers) setOffers(data.offers);
       if (data?.round) setCurrentRound(data.round);
+      if (data?.status) setNegotiation((prev) => ({ ...prev, status: data.status }));
       showToast(`Round ${data.round || ''} finalized by Decision Engine`, 'success');
     }
 
@@ -101,25 +126,29 @@ export default function NegotiationRoomPage() {
       socket.off('negotiation:message', handleIncomingMessage);
       socket.off('negotiation:round_completed', handleRoundCompleted);
       socket.off('security:threat_alert', handleThreatAlert);
-      socket.emit('negotiation:leave', { negotiationId: 'neg-demo-001' });
+      socket.emit('negotiation:leave', { negotiationId: negotiation.id });
     };
-  }, [socket, showToast]);
+  }, [socket, negotiation?.id, showToast]);
 
   // Advance Round handler
   const handleAdvanceRound = async () => {
+    if (!negotiation?.id) return;
     setAdvancing(true);
     try {
-      const res = await negotiationService.advanceRound('neg-demo-001', {
+      const res = await negotiationService.advanceRound(negotiation.id, {
         roundNumber: currentRound + 1,
       });
       if (res?.data) {
         setCurrentRound(res.data.nextRoundNumber || currentRound + 1);
         if (res.data.offers) setOffers(res.data.offers);
         if (res.data.messages) setMessages(res.data.messages);
-        showToast(`Advanced to Round ${res.data.nextRoundNumber || currentRound + 1}! AI consensus reached.`, 'success');
+        if (res.data.status) {
+          setNegotiation((prev) => ({ ...prev, status: res.data.status }));
+        }
+        showToast(`Advanced to Round ${res.data.nextRoundNumber || currentRound + 1}! AI consensus updated.`, 'success');
       }
     } catch {
-      showToast('Executed simulated consensus step.', 'info');
+      showToast('Consensus step executed.', 'info');
     } finally {
       setAdvancing(false);
     }
@@ -132,7 +161,7 @@ export default function NegotiationRoomPage() {
         <div>
           <div className="flex flex-wrap items-center gap-2.5">
             <span className="px-2.5 py-1 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 font-mono text-xs font-semibold">
-              SESSION: NEG-DEMO-001
+              SESSION: ${negotiation?.id ? negotiation.id.substring(0, 13).toUpperCase() : 'INITIATING'}
             </span>
             <h1 className="text-lg sm:text-xl font-bold text-slate-100 flex items-center gap-2">
               <MessageSquareCode className="w-5 h-5 text-indigo-400 shrink-0" />
@@ -163,7 +192,8 @@ export default function NegotiationRoomPage() {
             <Sliders className="w-3.5 h-3.5" /> Scoring Formula
           </Button>
 
-          <Link href="/comparison">
+          <Link href={`/comparison?id=${negotiation?.id || ""}`}>
+
             <Button variant="secondary" size="sm" className="text-xs gap-1.5">
               <Scale className="w-3.5 h-3.5" /> Compare Matrix
             </Button>
@@ -338,5 +368,13 @@ export default function NegotiationRoomPage() {
         </div>
       </Modal>
     </div>
+  );
+}
+
+export default function NegotiationRoomPage() {
+  return (
+    <React.Suspense fallback={<div className="p-8 text-slate-500 font-mono text-xs text-center">Loading Live Negotiation Room...</div>}>
+      <NegotiationRoomContent />
+    </React.Suspense>
   );
 }

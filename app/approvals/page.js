@@ -8,6 +8,8 @@ import Modal from '../../components/shared/Modal';
 import { transactionService } from '../../services/transactionService';
 import { useUI } from '../../context/UIContext';
 import { formatINR } from '../../utils/formatters';
+import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import {
   ShieldCheck,
   UserCheck,
@@ -22,7 +24,11 @@ import {
   Hash,
 } from 'lucide-react';
 
-export default function TransactionApprovalPage() {
+function TransactionApprovalContent() {
+  const searchParams = useSearchParams();
+  const paramId = searchParams.get('id');
+  const paramNegId = searchParams.get('negotiationId');
+
   const { showToast } = useUI();
   const [transactions, setTransactions] = useState([]);
   const [selectedTx, setSelectedTx] = useState(null);
@@ -44,11 +50,23 @@ export default function TransactionApprovalPage() {
     transactionService
       .getAll()
       .then((res) => {
-        if (mounted && res?.data) {
+        if (mounted && res?.data && Array.isArray(res.data)) {
           setTransactions(res.data);
-          const pending = res.data.find((t) => t.settlementStatus === 'PENDING_APPROVAL');
-          if (pending) setSelectedTx(pending);
-          else if (res.data.length > 0) setSelectedTx(res.data[0]);
+          let target = null;
+          if (paramId) {
+            target = res.data.find((t) => t.id === paramId);
+          }
+          if (!target && paramNegId) {
+            target = res.data.find((t) => t.negotiationId === paramNegId && t.settlementStatus === 'PENDING_APPROVAL')
+                  || res.data.find((t) => t.negotiationId === paramNegId);
+          }
+          if (!target) {
+            target = res.data.find((t) => t.settlementStatus === 'PENDING_APPROVAL');
+          }
+          if (!target && res.data.length > 0) {
+            target = res.data[0];
+          }
+          if (target) setSelectedTx(target);
         }
       })
       .catch(() => {});
@@ -56,7 +74,7 @@ export default function TransactionApprovalPage() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [paramId, paramNegId]);
 
   const handleApprove = async () => {
     if (!selectedTx) return;
@@ -193,6 +211,23 @@ export default function TransactionApprovalPage() {
           <span className="text-xs font-bold text-slate-400 uppercase tracking-wider font-mono">
             Settlement Queue ({transactions.length})
           </span>
+
+          {transactions.length > 0 && transactions.every((t) => t.settlementStatus !== 'PENDING_APPROVAL') && (
+            <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/25 text-xs text-amber-300 space-y-2">
+              <div className="flex items-center gap-1.5 font-medium">
+                <CheckCircle2 className="w-4 h-4 text-amber-400 shrink-0" />
+                <span>All transactions in queue are settled</span>
+              </div>
+              <p className="text-[11px] text-slate-400 leading-relaxed">
+                Initiate a new procurement from the Marketplace to negotiate and approve a new deal.
+              </p>
+              <Link href="/marketplace" className="inline-block">
+                <Button size="xs" variant="primary" className="text-xs">
+                  New Procurement RFQ
+                </Button>
+              </Link>
+            </div>
+          )}
 
           <div className="space-y-2.5">
             {transactions.map((tx) => (
@@ -393,5 +428,13 @@ export default function TransactionApprovalPage() {
         </form>
       </Modal>
     </div>
+  );
+}
+
+export default function TransactionApprovalPage() {
+  return (
+    <React.Suspense fallback={<div className="p-8 text-slate-500 font-mono text-xs text-center">Loading Transaction Approvals...</div>}>
+      <TransactionApprovalContent />
+    </React.Suspense>
   );
 }

@@ -73,7 +73,8 @@ export default function MarketplacePage() {
   const handleOpenRfq = (product) => {
     setSelectedProductForRfq(product);
     setTargetQuantity(12);
-    setTargetBudget(Math.min(50000, product.baseCostPrice * 12 * 1.1));
+    const unitCost = Number(product.baseCostPrice || 2500);
+    setTargetBudget(Math.min(50000, Math.round(unitCost * 12 * 1.1)));
   };
 
   const handleExecuteRfq = async (e) => {
@@ -82,7 +83,7 @@ export default function MarketplacePage() {
     setLaunchingRfq(true);
 
     try {
-      await negotiationService.create({
+      const res = await negotiationService.create({
         targetProductId: selectedProductForRfq.id,
         targetQuantity: Number(targetQuantity),
         maxBudget: Number(targetBudget),
@@ -90,11 +91,16 @@ export default function MarketplacePage() {
         targetResaleMargin: 25,
       });
 
+      const newId = res?.data?.id;
       showToast(`Autonomous RFQ initiated for ${selectedProductForRfq.name}!`, 'success');
       setSelectedProductForRfq(null);
-      router.push('/negotiation');
+      if (newId) {
+        router.push(`/negotiation?id=${newId}`);
+      } else {
+        router.push('/negotiation');
+      }
     } catch {
-      showToast('Initiated simulated session.', 'info');
+      showToast('Initiated session.', 'info');
       setSelectedProductForRfq(null);
       router.push('/negotiation');
     } finally {

@@ -9,6 +9,8 @@ import { negotiationService } from '../../services/negotiationService';
 import { useUI } from '../../context/UIContext';
 import { formatINR, formatPercentage } from '../../utils/formatters';
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { transactionService } from '../../services/transactionService';
 import {
   Scale,
   CheckCircle2,
@@ -21,10 +23,15 @@ import {
   Sparkles,
 } from 'lucide-react';
 
-export default function OfferComparisonPage() {
+function OfferComparisonContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const negotiationId = searchParams.get('id') || searchParams.get('negotiationId');
+
   const { showToast } = useUI();
   const [comparison, setComparison] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [proceeding, setProceeding] = useState(false);
 
   // Dynamic weight simulation sliders for Decision Engine testing
   const [weights, setWeights] = useState({
@@ -36,22 +43,50 @@ export default function OfferComparisonPage() {
 
   useEffect(() => {
     let mounted = true;
-    negotiationService
-      .getComparison('neg-demo-001')
-      .then((res) => {
+
+    async function loadComparison() {
+      try {
+        let targetId = negotiationId;
+        if (!targetId) {
+          const list = await negotiationService.getAll();
+          if (list?.data?.length > 0) {
+            targetId = list.data[0].id;
+          }
+        }
+        const res = await negotiationService.getComparison(targetId || 'neg-demo-001');
         if (mounted && res?.data) {
           setComparison(res.data);
         }
-      })
-      .catch(() => {})
-      .finally(() => {
+      } catch (err) {}
+      finally {
         if (mounted) setLoading(false);
-      });
+      }
+    }
 
+    loadComparison();
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [negotiationId]);
+
+  const handleProceedToApproval = async () => {
+    setProceeding(true);
+    const currentNegId = negotiationId || comparison?.negotiationId;
+    try {
+      if (currentNegId) {
+        const txRes = await transactionService.create({ negotiationId: currentNegId });
+        if (txRes?.data?.id) {
+          router.push(`/approvals?id=${txRes.data.id}&negotiationId=${currentNegId}`);
+          return;
+        }
+      }
+      router.push(`/approvals${currentNegId ? `?negotiationId=${currentNegId}` : ''}`);
+    } catch (err) {
+      router.push('/approvals');
+    } finally {
+      setProceeding(false);
+    }
+  };
 
   const offers = comparison?.offers || [
     {
@@ -119,6 +154,15 @@ export default function OfferComparisonPage() {
     return Math.round(score * 10) / 10;
   };
 
+  const getOfferScore = (offer) => {
+    if (!offer) return 0;
+    if (offer.subScores) {
+      const dynamic = calculateDynamicScore(offer.subScores);
+      if (dynamic > 0) return dynamic;
+    }
+    return offer.utilityScore ? Math.round(Number(offer.utilityScore) * 10) / 10 : 85.0;
+  };
+
   const handleExportCsv = () => {
     const headers = 'Criterion,Seller A,Seller B,Seller C\n';
     const rows = [
@@ -162,11 +206,15 @@ export default function OfferComparisonPage() {
             <Download className="w-3.5 h-3.5" /> Export CSV
           </Button>
 
-          <Link href="/approvals">
-            <Button variant="success" size="sm" className="gap-2 text-xs shadow-emerald-500/20 shadow-md">
-              <ShieldCheck className="w-4 h-4" /> Proceed to Human Approval
-            </Button>
-          </Link>
+          <Button
+            variant="success"
+            size="sm"
+            onClick={handleProceedToApproval}
+            loading={proceeding}
+            className="gap-2 text-xs shadow-emerald-500/20 shadow-md"
+          >
+            <ShieldCheck className="w-4 h-4" /> Proceed to Human Approval
+          </Button>
         </div>
       </div>
 
@@ -266,13 +314,13 @@ export default function OfferComparisonPage() {
               <tr className="bg-slate-950/80">
                 <td className="py-4 px-4 font-sans font-bold text-slate-100">Deterministic Utility Score</td>
                 <td className="py-4 px-4 text-emerald-400 font-bold text-base bg-emerald-950/20">
-                  {calculateDynamicScore(offers[0].subScores)} / 100
+                  {getOfferScore(offers[0])} / 100
                 </td>
                 <td className="py-4 px-4 text-blue-400 font-bold text-base bg-blue-950/20">
-                  {calculateDynamicScore(offers[1].subScores)} / 100
+                  {getOfferScore(offers[1])} / 100
                 </td>
                 <td className="py-4 px-4 text-rose-400 font-bold text-base bg-rose-950/20">
-                  {calculateDynamicScore(offers[2].subScores)} / 100
+                  {getOfferScore(offers[2])} / 100
                 </td>
               </tr>
             </tbody>
@@ -370,5 +418,13 @@ export default function OfferComparisonPage() {
         </Card>
       </div>
     </div>
+  );
+}
+
+export default function OfferComparisonPage() {
+  return (
+    <React.Suspense fallback={<div className="p-8 text-slate-500 font-mono text-xs text-center">Loading Offer Comparison...</div>}>
+      <OfferComparisonContent />
+    </React.Suspense>
   );
 }
