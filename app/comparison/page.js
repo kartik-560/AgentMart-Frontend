@@ -69,19 +69,26 @@ function OfferComparisonContent() {
     };
   }, [negotiationId]);
 
-  const handleProceedToApproval = async () => {
+  const handleProceedToApproval = async (chosenOffer = null) => {
     setProceeding(true);
     const currentNegId = negotiationId || comparison?.negotiationId;
+    const targetOffer = chosenOffer || offers.find((o) => o.isRecommended) || offers[0];
+
     try {
       if (currentNegId) {
-        const txRes = await transactionService.create({ negotiationId: currentNegId });
+        const payload = {
+          negotiationId: currentNegId,
+          offerId: targetOffer?.id,
+        };
+        const txRes = await transactionService.create(payload);
         if (txRes?.data?.id) {
-          router.push(`/approvals?id=${txRes.data.id}&negotiationId=${currentNegId}`);
+          router.push(`/approvals?id=${txRes.data.id}`);
           return;
         }
       }
       router.push(`/approvals${currentNegId ? `?negotiationId=${currentNegId}` : ''}`);
     } catch (err) {
+      console.error('Failed to create transaction from comparison:', err);
       router.push('/approvals');
     } finally {
       setProceeding(false);
@@ -219,30 +226,40 @@ function OfferComparisonContent() {
       </div>
 
       {/* Recommended Deal Spotlight */}
-      <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-emerald-950/40 via-slate-900 to-indigo-950/40 border border-emerald-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-lg">
-        <div className="flex items-start sm:items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shrink-0">
-            <CheckCircle2 className="w-5 h-5" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h4 className="text-sm sm:text-base font-bold text-emerald-300">
-                Optimal Recommendation: Prism Wholesale Direct (Agent A)
-              </h4>
-              <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 text-[10px] font-mono font-bold">
-                RECOMMENDED
-              </span>
+      {(() => {
+        const recommendedOffer = offers.find((o) => o.isRecommended) || offers[0];
+        const budgetCap = comparison?.constraints?.maxBudget || 50000;
+        const totalQuote = comparison?.recommendationSummary?.recommendedPrice || recommendedOffer?.totalPrice || 44400;
+        const savings = Math.max(0, budgetCap - totalQuote);
+
+        return (
+          <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-emerald-950/40 via-slate-900 to-indigo-950/40 border border-emerald-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-lg">
+            <div className="flex items-start sm:items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shrink-0">
+                <CheckCircle2 className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h4 className="text-sm sm:text-base font-bold text-emerald-300">
+                    Optimal Recommendation: {comparison?.recommendationSummary?.sellerName || recommendedOffer?.sellerName || 'Prism Wholesale Direct'}
+                  </h4>
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 text-[10px] font-mono font-bold">
+                    RECOMMENDED
+                  </span>
+                </div>
+                <p className="text-xs text-slate-300 mt-1 max-w-3xl leading-relaxed">
+                  {comparison?.recommendationSummary?.reasoning ||
+                    `Highest combined utility score (${getOfferScore(recommendedOffer)}/100) with ${formatINR(totalQuote)} total commitment (${formatINR(savings)} below budget cap), ${recommendedOffer?.deliveryHours || 40}h delivery, and ${recommendedOffer?.resaleMarginProjected || 24.5}% projected resale margin.`}
+                </p>
+              </div>
             </div>
-            <p className="text-xs text-slate-300 mt-1 max-w-3xl leading-relaxed">
-              Highest combined utility score (88.5/100) with ₹44,400 total commitment (₹5,600 below budget cap), 40h delivery (well under 48h SLA), and 24.5% projected resale margin.
-            </p>
+            <div className="text-right shrink-0">
+              <span className="text-[11px] text-slate-400 block font-mono">Total Quote</span>
+              <span className="font-mono text-2xl font-bold text-emerald-400">{formatINR(totalQuote)}</span>
+            </div>
           </div>
-        </div>
-        <div className="text-right shrink-0">
-          <span className="text-[11px] text-slate-400 block font-mono">Total Quote</span>
-          <span className="font-mono text-2xl font-bold text-emerald-400">{formatINR(44400)}</span>
-        </div>
-      </div>
+        );
+      })()}
 
       {/* Side-by-Side Comparison Matrix Table */}
       <Card title="Supplier Evaluation Matrix" subtitle="Strict deterministic validation across all criteria">
@@ -251,77 +268,123 @@ function OfferComparisonContent() {
             <thead>
               <tr className="border-b border-slate-800 text-slate-400">
                 <th className="py-3.5 px-4 font-semibold">Evaluation Criterion</th>
-                <th className="py-3.5 px-4 font-semibold text-emerald-400 bg-emerald-950/10">
-                  Seller A (Prism PriceBot)
-                </th>
-                <th className="py-3.5 px-4 font-semibold text-blue-400 bg-blue-950/10">
-                  Seller B (Swift CourierBot)
-                </th>
-                <th className="py-3.5 px-4 font-semibold text-rose-400 bg-rose-950/10">
-                  Seller C (ShadowBot)
-                </th>
+                {offers.map((offer, idx) => {
+                  const isRec = offer.isRecommended;
+                  const isFlagged = offer.securityStatus !== 'CLEAN';
+                  const colorClass = isRec
+                    ? 'text-emerald-400 bg-emerald-950/10'
+                    : isFlagged
+                    ? 'text-rose-400 bg-rose-950/10'
+                    : 'text-blue-400 bg-blue-950/10';
+                  return (
+                    <th key={offer.id || idx} className={`py-3.5 px-4 font-semibold ${colorClass}`}>
+                      {offer.sellerName || offer.name || `Seller ${String.fromCharCode(65 + idx)}`}
+                      {isRec && <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300">RECOMMENDED</span>}
+                    </th>
+                  );
+                })}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/70 font-mono text-slate-200">
               <tr className="hover:bg-slate-900/40">
                 <td className="py-3 px-4 font-sans text-slate-400 font-medium">Bidding Strategy</td>
-                <td className="py-3 px-4 bg-emerald-950/5">Wholesale Price Priority</td>
-                <td className="py-3 px-4 bg-blue-950/5">Expedited Quality Priority</td>
-                <td className="py-3 px-4 text-rose-400 bg-rose-950/5">Adversarial Simulation</td>
+                {offers.map((offer, idx) => (
+                  <td key={idx} className={`py-3 px-4 ${offer.isRecommended ? 'bg-emerald-950/5' : ''}`}>
+                    {offer.strategy || 'Wholesale Supply'}
+                  </td>
+                ))}
               </tr>
               <tr className="hover:bg-slate-900/40">
                 <td className="py-3 px-4 font-sans text-slate-400 font-medium">Offered Unit Rate</td>
-                <td className="py-3 px-4 text-emerald-400 font-bold bg-emerald-950/5">{formatINR(3700)}</td>
-                <td className="py-3 px-4 font-semibold bg-blue-950/5">{formatINR(3950)}</td>
-                <td className="py-3 px-4 text-rose-400 line-through bg-rose-950/5">{formatINR(3200)}</td>
+                {offers.map((offer, idx) => (
+                  <td key={idx} className={`py-3 px-4 font-bold ${offer.isRecommended ? 'text-emerald-400 bg-emerald-950/5' : offer.securityStatus !== 'CLEAN' ? 'text-rose-400 line-through' : 'text-blue-400'}`}>
+                    {formatINR(offer.unitPrice)}
+                  </td>
+                ))}
               </tr>
               <tr className="hover:bg-slate-900/40">
-                <td className="py-3 px-4 font-sans text-slate-400 font-medium">Total Price (12 Units)</td>
-                <td className="py-3 px-4 text-emerald-400 font-bold text-sm bg-emerald-950/5">{formatINR(44400)}</td>
-                <td className="py-3 px-4 font-bold text-sm bg-blue-950/5">{formatINR(47400)}</td>
-                <td className="py-3 px-4 text-rose-400 font-bold text-sm bg-rose-950/5">{formatINR(50400)} *</td>
+                <td className="py-3 px-4 font-sans text-slate-400 font-medium">Total Price ({offers[0]?.quantity || 1} Units)</td>
+                {offers.map((offer, idx) => (
+                  <td key={idx} className={`py-3 px-4 font-bold text-sm ${offer.isRecommended ? 'text-emerald-400 bg-emerald-950/5' : offer.securityStatus !== 'CLEAN' ? 'text-rose-400' : 'text-blue-400'}`}>
+                    {formatINR(offer.totalPrice)} {offer.securityStatus !== 'CLEAN' ? '*' : ''}
+                  </td>
+                ))}
               </tr>
               <tr className="hover:bg-slate-900/40">
-                <td className="py-3 px-4 font-sans text-slate-400 font-medium">Budget Check (&lt;= ₹50k)</td>
-                <td className="py-3 px-4 text-emerald-400 bg-emerald-950/5">✓ PASS (₹5,600 buffer)</td>
-                <td className="py-3 px-4 text-emerald-400 bg-blue-950/5">✓ PASS (₹2,600 buffer)</td>
-                <td className="py-3 px-4 text-rose-400 font-bold bg-rose-950/5">✗ BREACH (+₹400 over)</td>
+                {(() => {
+                  const budgetCap = comparison?.constraints?.maxBudget || 50000;
+                  return (
+                    <>
+                      <td className="py-3 px-4 font-sans text-slate-400 font-medium">Budget Check ({'<='} {formatINR(budgetCap)})</td>
+                      {offers.map((offer, idx) => {
+                        const diff = budgetCap - offer.totalPrice;
+                        const passes = diff >= 0 && offer.withinBudget !== false;
+                        return (
+                          <td key={idx} className={`py-3 px-4 font-medium ${passes ? 'text-emerald-400 bg-emerald-950/5' : 'text-rose-400 font-bold bg-rose-950/5'}`}>
+                            {passes ? `✓ PASS (${formatINR(diff)} buffer)` : `✗ BREACH (+${formatINR(Math.abs(diff))} over)`}
+                          </td>
+                        );
+                      })}
+                    </>
+                  );
+                })()}
               </tr>
               <tr className="hover:bg-slate-900/40">
                 <td className="py-3 px-4 font-sans text-slate-400 font-medium">Fulfillment SLA Lead Time</td>
-                <td className="py-3 px-4 bg-emerald-950/5">40 Hours (Passes 48h limit)</td>
-                <td className="py-3 px-4 text-blue-400 font-bold bg-blue-950/5">20 Hours (Ultra Fast)</td>
-                <td className="py-3 px-4 text-slate-400 bg-rose-950/5">12 Hours (Unverified)</td>
+                {offers.map((offer, idx) => (
+                  <td key={idx} className={`py-3 px-4 ${offer.isRecommended ? 'text-emerald-400 bg-emerald-950/5' : 'text-slate-300'}`}>
+                    {offer.deliveryHours} Hours {offer.withinSla ? '(Passes SLA)' : '(Breaches SLA)'}
+                  </td>
+                ))}
               </tr>
               <tr className="hover:bg-slate-900/40">
                 <td className="py-3 px-4 font-sans text-slate-400 font-medium">Build Quality & Warranty</td>
-                <td className="py-3 px-4 bg-emerald-950/5">Enterprise (24m Warranty)</td>
-                <td className="py-3 px-4 text-blue-400 bg-blue-950/5">Enterprise-Plus (36m)</td>
-                <td className="py-3 px-4 text-rose-400 bg-rose-950/5">Uncertified (6m)</td>
+                {offers.map((offer, idx) => (
+                  <td key={idx} className={`py-3 px-4 ${offer.isRecommended ? 'text-emerald-400 bg-emerald-950/5' : 'text-slate-300'}`}>
+                    {offer.qualityGrade || 'Enterprise'}
+                  </td>
+                ))}
               </tr>
               <tr className="hover:bg-slate-900/40">
                 <td className="py-3 px-4 font-sans text-slate-400 font-medium">Projected Resale Margin</td>
-                <td className="py-3 px-4 text-emerald-400 font-bold bg-emerald-950/5">24.50%</td>
-                <td className="py-3 px-4 font-semibold bg-blue-950/5">21.00%</td>
-                <td className="py-3 px-4 text-rose-400 bg-rose-950/5">5.00%</td>
+                {offers.map((offer, idx) => (
+                  <td key={idx} className={`py-3 px-4 ${offer.isRecommended ? 'text-emerald-400 font-bold bg-emerald-950/5' : 'text-slate-300'}`}>
+                    {Number(offer.resaleMarginProjected || 0).toFixed(2)}%
+                  </td>
+                ))}
               </tr>
               <tr className="hover:bg-slate-900/40">
                 <td className="py-3 px-4 font-sans text-slate-400 font-medium">Zero-Trust Inspection</td>
-                <td className="py-3 px-4 text-emerald-400 bg-emerald-950/5">PASSED / VERIFIED</td>
-                <td className="py-3 px-4 text-emerald-400 bg-blue-950/5">PASSED / VERIFIED</td>
-                <td className="py-3 px-4 text-rose-400 font-bold bg-rose-950/5">FLAGGED: +₹12k Disguised Fee</td>
+                {offers.map((offer, idx) => (
+                  <td key={idx} className={`py-3 px-4 ${offer.securityStatus === 'CLEAN' ? 'text-emerald-400 bg-emerald-950/5' : 'text-rose-400 font-bold bg-rose-950/5'}`}>
+                    {offer.securityStatus === 'CLEAN' ? 'PASSED / VERIFIED' : offer.flagReason || 'FLAGGED: Suspicious terms'}
+                  </td>
+                ))}
               </tr>
               <tr className="bg-slate-950/80">
                 <td className="py-4 px-4 font-sans font-bold text-slate-100">Deterministic Utility Score</td>
-                <td className="py-4 px-4 text-emerald-400 font-bold text-base bg-emerald-950/20">
-                  {getOfferScore(offers[0])} / 100
-                </td>
-                <td className="py-4 px-4 text-blue-400 font-bold text-base bg-blue-950/20">
-                  {getOfferScore(offers[1])} / 100
-                </td>
-                <td className="py-4 px-4 text-rose-400 font-bold text-base bg-rose-950/20">
-                  {getOfferScore(offers[2])} / 100
-                </td>
+                {offers.map((offer, idx) => (
+                  <td key={idx} className={`py-4 px-4 font-bold text-base ${offer.isRecommended ? 'text-emerald-400 bg-emerald-950/20' : offer.securityStatus !== 'CLEAN' ? 'text-rose-400 bg-rose-950/20' : 'text-blue-400 bg-blue-950/20'}`}>
+                    {getOfferScore(offer)} / 100
+                  </td>
+                ))}
+              </tr>
+              <tr className="hover:bg-slate-900/40">
+                <td className="py-3.5 px-4 font-sans font-medium text-slate-300">Authorize Selected Deal</td>
+                {offers.map((offer, idx) => (
+                  <td key={idx} className="py-3.5 px-4">
+                    <Button
+                      variant={offer.isRecommended ? 'success' : 'outline'}
+                      size="xs"
+                      onClick={() => handleProceedToApproval(offer)}
+                      disabled={proceeding || offer.securityStatus !== 'CLEAN'}
+                      className="w-full text-[11px] gap-1.5 shadow-sm"
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      {offer.isRecommended ? 'Approve Optimal Deal' : `Select Deal (${formatINR(offer.totalPrice)})`}
+                    </Button>
+                  </td>
+                ))}
               </tr>
             </tbody>
           </table>

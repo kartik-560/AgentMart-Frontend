@@ -8,12 +8,9 @@ import Link from 'next/link';
 import {
   CheckCircle2,
   Clock,
-  ShieldAlert,
   Award,
   AlertTriangle,
   Scale,
-  ArrowRight,
-  TrendingUp,
 } from 'lucide-react';
 
 export default function OfferCards({ offers = [], onSelectOffer }) {
@@ -75,7 +72,7 @@ export default function OfferCards({ offers = [], onSelectOffer }) {
                       isWinner ? 'text-emerald-400' : isMalicious ? 'text-rose-400' : 'text-blue-400'
                     }`}
                   >
-                    {offer.utilityScore ? offer.utilityScore.toFixed(1) : '85.0'} / 100
+                    {offer.utilityScore ? Number(offer.utilityScore).toFixed(1) : '85.0'} / 100
                   </span>
                 </div>
               </div>
@@ -92,7 +89,7 @@ export default function OfferCards({ offers = [], onSelectOffer }) {
                 </div>
                 <div className="text-right text-[11px]">
                   <span className="text-slate-500 block text-[10px]">Projected Margin</span>
-                  <span className={`font-mono font-bold ${offer.resaleMarginProjected >= 24 ? 'text-emerald-400' : 'text-amber-400'}`}>
+                  <span className={`font-mono font-bold ${Number(offer.resaleMarginProjected || 0) >= 24 ? 'text-emerald-400' : 'text-amber-400'}`}>
                     {offer.resaleMarginProjected ? `${offer.resaleMarginProjected}%` : '21.0%'}
                   </span>
                 </div>
@@ -109,10 +106,10 @@ export default function OfferCards({ offers = [], onSelectOffer }) {
                   <span>{offer.qualityGrade || 'Enterprise'}</span>
                 </div>
                 <div className="text-right font-mono">
-                  {offer.withinBudget ? (
-                    <span className="text-emerald-400">Under ₹50k</span>
+                  {offer.withinBudget !== false ? (
+                    <span className="text-emerald-400">Within Budget</span>
                   ) : (
-                    <span className="text-rose-400 font-bold">+₹400 Over</span>
+                    <span className="text-rose-400 font-bold">Over Budget</span>
                   )}
                 </div>
               </div>
@@ -120,9 +117,26 @@ export default function OfferCards({ offers = [], onSelectOffer }) {
               {/* Anomaly note if detected */}
               {isMalicious && (
                 <div className="mt-2.5 p-2 rounded-lg bg-rose-950/60 border border-rose-800 text-[10px] text-rose-300 font-mono">
-                  Detected Fee: ₹12,000 | Adjusted Total: ₹50,400 (Breaches Cap)
+                  {offer.rejectionReason || 'Security Alert: Disguised fee detected violating platform boundaries'}
                 </div>
               )}
+
+              {/* Select & Proceed Button */}
+              <div className="mt-3 pt-2.5 border-t border-slate-800/60 flex items-center justify-between">
+                <span className="text-[10px] text-slate-500 font-mono">
+                  Terms: {offer.paymentTerms || 'MOCK_UPI'}
+                </span>
+                <Button
+                  size="xs"
+                  variant={isWinner ? 'success' : 'outline'}
+                  onClick={() => onSelectOffer && onSelectOffer(offer)}
+                  disabled={isMalicious}
+                  className="gap-1 text-[11px]"
+                >
+                  <CheckCircle2 className="w-3 h-3" />
+                  {isWinner ? 'Approve Deal' : `Select Deal (${formatINR(offer.totalPrice)})`}
+                </Button>
+              </div>
             </div>
           );
         })}
@@ -130,4 +144,3 @@ export default function OfferCards({ offers = [], onSelectOffer }) {
     </Card>
   );
 }
-

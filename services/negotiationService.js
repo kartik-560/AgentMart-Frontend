@@ -77,7 +77,7 @@ export const negotiationService = {
         senderName: 'Apex Autonomous Buyer',
         intent: 'ROUND_EVALUATION',
         timestamp: now,
-        content: `Round ${nextRound} Consensus Evaluation: Prism Wholesale (Agent A) quote of ₹3,700 meets all enterprise constraints (Budget: ₹44,400 <= ₹50,000, SLA: 40h <= 48h, Margin: 24.5%). Finalizing deal recommendation for human sign-off.`,
+        content: `Round ${nextRound} Consensus Evaluation: Prism Wholesale (Agent A) quote of ₹3,700 meets all enterprise constraints (Budget: ₹44,400 <= ₹${activeNegotiationCache.maxBudget || 50000}, SLA: 40h <= 48h, Margin: 24.5%). Finalizing deal recommendation for human sign-off.`,
         proposal: null,
         securityStatus: 'PASSED',
       },
@@ -144,7 +144,7 @@ export const negotiationService = {
           budgetSaved: 5600.0,
           utilityScore: 88.5,
           reasoning:
-            'Seller A achieves the highest deterministic multi-attribute utility score (88.5/100). Complies with the ₹50,000 budget ceiling (saving ₹5,600), fulfills the 48-hour delivery SLA with 40-hour lead time, and yields a 24.5% projected resale margin.',
+            `Seller A achieves the highest deterministic multi-attribute utility score (88.5/100). Complies with the budget ceiling, fulfills the 48-hour delivery SLA with 40-hour lead time, and yields a 24.5% projected resale margin.`,
         },
       },
     };

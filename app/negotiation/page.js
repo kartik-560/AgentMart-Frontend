@@ -154,6 +154,24 @@ function NegotiationRoomContent() {
     }
   };
 
+  const handleSelectOffer = async (offer) => {
+    if (!negotiation?.id || !offer?.id) return;
+    try {
+      showToast(`Persisting deal with ${offer.sellerName || offer.name || 'supplier'}...`, 'info');
+      const res = await transactionService.create({
+        negotiationId: negotiation.id,
+        offerId: offer.id,
+      });
+      if (res?.data?.id) {
+        router.push(`/approvals?id=${res.data.id}`);
+        return;
+      }
+      router.push(`/approvals?negotiationId=${negotiation.id}`);
+    } catch (err) {
+      showToast('Could not persist transaction: ' + (err?.message || 'Error'), 'error');
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Session Breadcrumbs & Action Bar */}
@@ -230,10 +248,21 @@ function NegotiationRoomContent() {
       </div>
 
       {/* 2. Capital Boundary & Deterministic Headroom Bar */}
-      <BudgetAllocationBar currentTotal={44400} budgetCap={50000} />
+      {(() => {
+        const topOffer = offers.find((o) => o.isRecommended) || offers[0];
+        const currentTotal = topOffer ? Number(topOffer.totalPrice) : 0;
+        const budgetCap = Number(negotiation?.maxBudget || 50000);
+        return <BudgetAllocationBar currentTotal={currentTotal} budgetCap={budgetCap} />;
+      })()}
 
       {/* 3. Final AI Recommendation Spotlight */}
-      <AIRecommendationBanner negotiationId="neg-demo-001" />
+      {offers.length > 0 && (
+        <AIRecommendationBanner
+          negotiation={negotiation}
+          offers={offers}
+          negotiationId={negotiation?.id}
+        />
+      )}
 
       {/* 4. Main 2-Column Section: Discourse Stream & Competing Quotes */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -258,7 +287,7 @@ function NegotiationRoomContent() {
           {/* Competing Supplier Quotes Card */}
           <OfferCards
             offers={offers}
-            onSelectOffer={(offer) => showToast(`Selected ${offer.sellerName}`, 'info')}
+            onSelectOffer={handleSelectOffer}
           />
 
           {/* Multi-Attribute Utility Breakdown Chart */}

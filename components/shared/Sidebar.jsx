@@ -145,8 +145,8 @@ export default function Sidebar() {
             </div>
             <span className="text-[10px] text-slate-500 font-mono">v1.0</span>
           </div>
-          <div className="mt-1.5 text-[10px] text-slate-500">
-            Strict Cap: ₹50,000 / 48h SLA
+          <div className="mt-1.5 text-[10px] text-slate-500 font-mono">
+            Autonomous Procurement / Zero-Trust
           </div>
         </div>
       </aside>

@@ -170,12 +170,12 @@ export default function BusinessProfilePage() {
                   </label>
                   <input
                     type="number"
-                    max="50000"
+                    
                     value={formData.budgetLimit}
                     onChange={(e) => setFormData({ ...formData, budgetLimit: Number(e.target.value) })}
                     className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-emerald-400 font-mono font-bold text-xs focus:outline-none focus:border-indigo-500"
                   />
-                  <span className="text-[10px] text-slate-500">Deterministic Hard Limit: ₹50,000</span>
+                  <span className="text-[10px] text-emerald-400">Unrestricted Procurement Budget</span>
                 </div>
 
                 <div>

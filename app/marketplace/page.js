@@ -74,7 +74,7 @@ export default function MarketplacePage() {
     setSelectedProductForRfq(product);
     setTargetQuantity(12);
     const unitCost = Number(product.baseCostPrice || 2500);
-    setTargetBudget(Math.min(50000, Math.round(unitCost * 12 * 1.1)));
+    setTargetBudget(Math.round(unitCost * 12 * 1.1));
   };
 
   const handleExecuteRfq = async (e) => {
@@ -326,12 +326,12 @@ export default function MarketplacePage() {
                 <label className="block text-xs font-medium text-slate-300 mb-1">Budget Ceiling (INR)</label>
                 <input
                   type="number"
-                  max="50000"
+                  
                   value={targetBudget}
                   onChange={(e) => setTargetBudget(e.target.value)}
                   className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-emerald-400 text-xs font-mono font-bold focus:outline-none focus:border-indigo-500"
                 />
-                <span className="text-[10px] text-slate-500">Max limit: ₹50,000</span>
+                <span className="text-[10px] text-emerald-400">Unrestricted Budget</span>
               </div>
             </div>
 

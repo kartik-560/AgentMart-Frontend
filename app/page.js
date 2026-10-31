@@ -11,6 +11,7 @@ import { BudgetAllocationBar } from '../components/shared/Charts';
 import { negotiationService } from '../services/negotiationService';
 import { securityService, productService } from '../services/agentService';
 import { transactionService } from '../services/transactionService';
+import { useBusiness } from '../context/BusinessContext';
 import { useUI } from '../context/UIContext';
 import { formatINR } from '../utils/formatters';
 import Link from 'next/link';
@@ -30,6 +31,7 @@ import {
 export default function DashboardPage() {
   const router = useRouter();
   const { showToast } = useUI();
+  const { profile } = useBusiness();
   const [negotiations, setNegotiations] = useState([]);
   const [transactions, setTransactions] = useState([]);
   const [alerts, setAlerts] = useState([]);
@@ -40,7 +42,7 @@ export default function DashboardPage() {
   const [isRfqModalOpen, setIsRfqModalOpen] = useState(false);
   const [rfqSku, setRfqSku] = useState('ELEC-RT-001');
   const [rfqQuantity, setRfqQuantity] = useState(12);
-  const [rfqBudget, setRfqBudget] = useState(50000);
+  const [rfqBudget, setRfqBudget] = useState(profile?.budgetLimit || 50000);
   const [creatingRfq, setCreatingRfq] = useState(false);
 
   useEffect(() => {
@@ -109,7 +111,7 @@ export default function DashboardPage() {
             Procurement Operations Command Center
           </h1>
           <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-            Autonomous buyer and seller agents conduct multi-attribute commercial negotiations governed by deterministic financial boundaries (₹50,000 budget cap, 48h SLA) and mandatory human sign-off.
+            Autonomous buyer and seller agents conduct multi-attribute commercial negotiations governed by deterministic financial boundaries and mandatory human sign-off.
           </p>
         </div>
 
@@ -142,14 +144,14 @@ export default function DashboardPage() {
       {/* 4 Core KPI Metrics */}
       <MetricsOverview
         metrics={{
-          budgetCap: 50000,
-          targetMargin: 25.0,
+          budgetCap: profile?.budgetLimit || 50000,
+          targetMargin: profile?.targetResaleMargin || 25.0,
           threatsCount: alerts.length || 3,
         }}
       />
 
       {/* Budget Allocation Progress Bar */}
-      <BudgetAllocationBar currentTotal={settledTotalSpend} budgetCap={50000} />
+      <BudgetAllocationBar currentTotal={settledTotalSpend} budgetCap={profile?.budgetLimit || 50000} />
 
       {/* 2-Column Split: Active Negotiations & Intercepted Threats */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -202,12 +204,12 @@ export default function DashboardPage() {
               </label>
               <input
                 type="number"
-                max="50000"
+                
                 value={rfqBudget}
                 onChange={(e) => setRfqBudget(e.target.value)}
                 className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-emerald-400 text-xs font-mono font-bold focus:outline-none focus:border-indigo-500"
               />
-              <span className="text-[10px] text-slate-500">Deterministic ceiling: ₹50,000</span>
+              <span className="text-[10px] text-emerald-400">Unrestricted Budget</span>
             </div>
           </div>
 
