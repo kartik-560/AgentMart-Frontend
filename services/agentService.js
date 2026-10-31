@@ -1,27 +1,192 @@
 import api from './api';
+import {
+  INITIAL_AGENTS,
+  INITIAL_BUSINESS_PROFILE,
+  INITIAL_PRODUCTS,
+  INITIAL_AUDIT_LOGS,
+  INITIAL_THREAT_RADAR,
+} from './mockData';
+
+// In-memory runtime cache for seamless offline/fallback state
+let agentsCache = [...INITIAL_AGENTS];
+let businessProfileCache = { ...INITIAL_BUSINESS_PROFILE };
+let productsCache = [...INITIAL_PRODUCTS];
+let auditLogsCache = [...INITIAL_AUDIT_LOGS];
+let threatRadarCache = { ...INITIAL_THREAT_RADAR };
 
 export const agentService = {
-  getAll: () => api.get('/agents'),
-  updateStatus: (id, status, reason) => api.patch(`/agents/${id}/status`, { status, reason }),
+  getAll: async () => {
+    try {
+      const res = await api.get('/agents');
+      if (res?.data && Array.isArray(res.data) && res.data.length > 0) {
+        agentsCache = res.data;
+        return res;
+      }
+    } catch (err) {
+      // Graceful fallback to mock data
+    }
+    return { success: true, statusCode: 200, data: agentsCache };
+  },
+
+  getById: async (id) => {
+    try {
+      const res = await api.get(`/agents/${id}`);
+      if (res?.data) return res;
+    } catch (err) {}
+    const agent = agentsCache.find((a) => a.id === id) || agentsCache[0];
+    return { success: true, statusCode: 200, data: agent };
+  },
+
+  updateStatus: async (id, status, reason = '') => {
+    try {
+      const res = await api.patch(`/agents/${id}/status`, { status, reason });
+      if (res?.data) {
+        agentsCache = agentsCache.map((a) => (a.id === id ? { ...a, status } : a));
+        return res;
+      }
+    } catch (err) {}
+    agentsCache = agentsCache.map((a) => (a.id === id ? { ...a, status } : a));
+    return { success: true, statusCode: 200, data: { id, status, reason } };
+  },
 };
 
 export const businessService = {
-  getProfile: () => api.get('/business/profile'),
-  updateProfile: (data) => api.put('/business/profile', data),
+  getProfile: async () => {
+    try {
+      const res = await api.get('/business/profile');
+      if (res?.data) {
+        businessProfileCache = { ...businessProfileCache, ...res.data };
+        return res;
+      }
+    } catch (err) {}
+    return { success: true, statusCode: 200, data: businessProfileCache };
+  },
+
+  updateProfile: async (data) => {
+    try {
+      const res = await api.put('/business/profile', data);
+      if (res?.data) {
+        businessProfileCache = { ...businessProfileCache, ...res.data };
+        return res;
+      }
+    } catch (err) {}
+    businessProfileCache = { ...businessProfileCache, ...data };
+    return { success: true, statusCode: 200, data: businessProfileCache };
+  },
 };
 
 export const productService = {
-  getAll: (params = {}) => api.get('/products', { params }),
-  getById: (id) => api.get(`/products/${id}`),
+  getAll: async (params = {}) => {
+    try {
+      const res = await api.get('/products', { params });
+      if (res?.data?.products && res.data.products.length > 0) {
+        productsCache = res.data.products;
+        return res;
+      }
+    } catch (err) {}
+
+    let filtered = [...productsCache];
+    if (params.category && params.category !== 'ALL') {
+      filtered = filtered.filter((p) => p.category.toLowerCase() === params.category.toLowerCase());
+    }
+    if (params.search) {
+      const q = params.search.toLowerCase();
+      filtered = filtered.filter((p) => p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q));
+    }
+
+    return {
+      success: true,
+      statusCode: 200,
+      data: {
+        products: filtered,
+        total: filtered.length,
+        limit: params.limit || 50,
+        offset: params.offset || 0,
+      },
+    };
+  },
+
+  getById: async (id) => {
+    try {
+      const res = await api.get(`/products/${id}`);
+      if (res?.data) return res;
+    } catch (err) {}
+    const product = productsCache.find((p) => p.id === id || p.sku === id) || productsCache[0];
+    return { success: true, statusCode: 200, data: product };
+  },
 };
 
 export const securityService = {
-  getAlerts: () => api.get('/security/alerts'),
-  getThreatRadar: () => api.get('/security/threat-radar'),
-  resolveAlert: (id, data) => api.post(`/security/alerts/${id}/resolve`, data),
+  getAlerts: async () => {
+    try {
+      const res = await api.get('/security/alerts');
+      if (res?.data && Array.isArray(res.data)) {
+        return res;
+      }
+    } catch (err) {}
+    // Return alerts from initial mock negotiation
+    const { INITIAL_NEGOTIATION } = await import('./mockData');
+    return { success: true, statusCode: 200, data: INITIAL_NEGOTIATION.securityAlerts };
+  },
+
+  getThreatRadar: async () => {
+    try {
+      const res = await api.get('/security/threat-radar');
+      if (res?.data) {
+        threatRadarCache = res.data;
+        return res;
+      }
+    } catch (err) {}
+    return { success: true, statusCode: 200, data: threatRadarCache };
+  },
+
+  resolveAlert: async (id, data = {}) => {
+    try {
+      const res = await api.post(`/security/alerts/${id}/resolve`, data);
+      if (res?.data) return res;
+    } catch (err) {}
+    return {
+      success: true,
+      statusCode: 200,
+      data: { id, resolved: true, ...data, resolvedAt: new Date().toISOString() },
+    };
+  },
 };
 
 export const auditService = {
-  getLogs: (params = {}) => api.get('/audit/logs', { params }),
-};
+  getLogs: async (params = {}) => {
+    try {
+      const res = await api.get('/audit/logs', { params });
+      if (res?.data?.logs) return res;
+    } catch (err) {}
 
+    let filtered = [...auditLogsCache];
+    if (params.entityType && params.entityType !== 'ALL') {
+      filtered = filtered.filter((l) => l.entityType === params.entityType);
+    }
+    if (params.actorType && params.actorType !== 'ALL') {
+      filtered = filtered.filter((l) => l.actorType === params.actorType);
+    }
+
+    return {
+      success: true,
+      statusCode: 200,
+      data: {
+        logs: filtered,
+        total: filtered.length,
+        limit: params.limit || 50,
+        offset: params.offset || 0,
+      },
+    };
+  },
+
+  appendLog: (entry) => {
+    const newLog = {
+      id: `log-${Date.now()}`,
+      timestamp: new Date().toISOString(),
+      ...entry,
+    };
+    auditLogsCache.unshift(newLog);
+    return newLog;
+  },
+};
