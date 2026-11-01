@@ -32,6 +32,7 @@ export default function CommercialProposalCard({
   const paymentMethod = proposal.paymentMethodRequested || proposal.paymentMethod || 'MOCK_UPI';
   const notes = proposal.notes || '';
   const declaredFees = proposal.declaredFees || 0;
+  const maxBudget = proposal.maxBudget ? Number(proposal.maxBudget) : null;
 
   return (
     <div className="mt-3 rounded-xl border border-[#1e3a8a]/25 bg-[#fffdf9] shadow-xs overflow-hidden text-[#172554]">
@@ -48,11 +49,16 @@ export default function CommercialProposalCard({
           <span className="font-mono font-bold text-[#faf7ee] text-xs px-2 py-0.5 rounded bg-[#1d4ed8] border border-[#1d4ed8]">
             {formatINR(totalPrice)}
           </span>
+          {maxBudget ? (
+            <span className="font-mono text-[10px] font-bold text-[#1e3a8a] px-2 py-0.5 rounded bg-[#f4efe3] border border-[#1e3a8a]/30">
+              Ceiling: {formatINR(maxBudget)}
+            </span>
+          ) : null}
         </div>
       </div>
 
       {/* Grid of Key Commercial Terms */}
-      <div className="p-3.5 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+      <div className={`p-3.5 grid grid-cols-2 ${maxBudget ? 'sm:grid-cols-5' : 'sm:grid-cols-4'} gap-3 text-xs`}>
         <div className="p-2 rounded-lg bg-[#faf7ee] border border-[#1e3a8a]/20">
           <div className="flex items-center gap-1.5 text-[#1e3a8a] text-[10px] mb-1 font-medium">
             <IndianRupee className="w-3 h-3 text-[#1d4ed8]" />
@@ -61,8 +67,21 @@ export default function CommercialProposalCard({
           <div className="font-bold text-[#172554] font-mono text-sm">
             {formatINR(unitPrice)}
           </div>
-          <div className="text-[10px] text-[#1e3a8a]/70">Per single item</div>
+          <div className="text-[10px] text-[#1e3a8a]/70">Base product cost</div>
         </div>
+
+        {maxBudget ? (
+          <div className="p-2 rounded-lg bg-[#faf7ee] border border-[#1e3a8a]/20">
+            <div className="flex items-center gap-1.5 text-[#1e3a8a] text-[10px] mb-1 font-medium">
+              <Tag className="w-3 h-3 text-[#1d4ed8]" />
+              <span>Budget Ceiling</span>
+            </div>
+            <div className="font-bold text-[#1d4ed8] font-mono text-sm">
+              {formatINR(maxBudget)}
+            </div>
+            <div className="text-[10px] text-[#1e3a8a]/70">Authorized limit</div>
+          </div>
+        ) : null}
 
         <div className="p-2 rounded-lg bg-[#faf7ee] border border-[#1e3a8a]/20">
           <div className="flex items-center gap-1.5 text-[#1e3a8a] text-[10px] mb-1 font-medium">

@@ -127,7 +127,8 @@ export default function DashboardPage() {
     try {
       const selectedProd = products.find((p) => p.sku === rfqSku) || products[0];
       const res = await negotiationService.create({
-        targetProductId: selectedProd?.id || 'prod-01',
+        targetProductId: selectedProd?.id,
+        targetSku: selectedProd?.sku,
         targetQuantity: Number(rfqQuantity),
         maxBudget: Number(rfqBudget),
         maxDeliveryHours: 48,

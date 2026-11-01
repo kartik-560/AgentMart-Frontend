@@ -122,12 +122,46 @@ export function BudgetAllocationBar({ currentTotal, budgetCap = 50000 }) {
 /**
  * Round-by-Round Price Convergence Trend Line Chart (SVG)
  */
-export function PriceConvergenceChart() {
-  const minVal = 42000;
-  const maxVal = 55000;
-  const range = maxVal - minVal;
+export function PriceConvergenceChart({ offers = [], budgetCap = 50000 }) {
+  const cap = Number(budgetCap) > 0 ? Number(budgetCap) : 50000;
 
-  const getY = (val) => 120 - ((val - minVal) / range) * 100;
+  // Extract all offer total prices to dynamically scale the chart
+  const validPrices = (offers || [])
+    .map((o) => Number(o.totalPrice || o.unitPrice || 0))
+    .filter((p) => p > 0);
+
+  const minOffer = validPrices.length > 0 ? Math.min(...validPrices, cap * 0.85) : cap * 0.85;
+  const maxOffer = validPrices.length > 0 ? Math.max(...validPrices, cap * 1.1) : cap * 1.1;
+
+  const minVal = Math.max(0, Math.floor(minOffer * 0.95));
+  const maxVal = Math.ceil(maxOffer * 1.05);
+  const range = maxVal - minVal > 0 ? maxVal - minVal : 1;
+
+  const getY = (val) => Math.max(10, Math.min(120, 120 - ((Number(val) - minVal) / range) * 100));
+
+  // Find latest/active quotes per seller category
+  const sellerAOffers = (offers || []).filter((o) => o.sellerType === 'SELLER_A_PRICE');
+  const sellerBOffers = (offers || []).filter((o) => o.sellerType === 'SELLER_B_SPEED_QUALITY');
+  const sellerCOffers = (offers || []).filter((o) => o.sellerType === 'SELLER_C_MALICIOUS');
+
+  const getPriceAtRound = (sellerList, r, defaultRatio) => {
+    const match = sellerList.find((o) => o.roundNumber === r);
+    if (match) return Number(match.totalPrice || match.unitPrice);
+    if (sellerList.length > 0) return Number(sellerList[sellerList.length - 1].totalPrice);
+    return Math.round(cap * defaultRatio);
+  };
+
+  const aR1 = getPriceAtRound(sellerAOffers, 1, 0.92);
+  const aR2 = getPriceAtRound(sellerAOffers, 2, 0.88);
+  const aR3 = getPriceAtRound(sellerAOffers, 3, 0.88);
+
+  const bR1 = getPriceAtRound(sellerBOffers, 1, 0.98);
+  const bR2 = getPriceAtRound(sellerBOffers, 2, 0.95);
+  const bR3 = getPriceAtRound(sellerBOffers, 3, 0.95);
+
+  const cR1 = getPriceAtRound(sellerCOffers, 1, 1.05);
+  const cR2 = getPriceAtRound(sellerCOffers, 2, 1.01);
+  const cR3 = getPriceAtRound(sellerCOffers, 3, 1.01);
 
   return (
     <div className="space-y-3 text-[#172554]">
@@ -144,7 +178,7 @@ export function PriceConvergenceChart() {
           </span>
         </div>
         <span className="font-mono text-[11px] text-[#172554] border border-[#1e3a8a]/25 px-2 py-0.5 rounded bg-[#f4efe3] font-bold">
-          Max Budget Cap: ₹50,000
+          Max Budget Cap: {formatINR(cap)}
         </span>
       </div>
 
@@ -153,15 +187,15 @@ export function PriceConvergenceChart() {
           {/* Budget ceiling line */}
           <line
             x1="20"
-            y1={getY(50000)}
+            y1={getY(cap)}
             x2="380"
-            y2={getY(50000)}
+            y2={getY(cap)}
             stroke="#172554"
             strokeDasharray="4 4"
             strokeWidth="1.5"
           />
-          <text x="382" y={getY(50000) + 3} fill="#172554" fontSize="8" fontFamily="monospace" fontWeight="bold">
-            ₹50k Cap
+          <text x="320" y={Math.max(12, getY(cap) - 5)} fill="#172554" fontSize="8" fontFamily="monospace" fontWeight="bold">
+            Cap: {formatINR(cap)}
           </text>
 
           {/* Seller A line (Primary Royal Blue) */}
@@ -169,22 +203,22 @@ export function PriceConvergenceChart() {
             fill="none"
             stroke="#1d4ed8"
             strokeWidth="2.5"
-            points={`50,${getY(46200)} 200,${getY(44400)} 350,${getY(44400)}`}
+            points={`50,${getY(aR1)} 200,${getY(aR2)} 350,${getY(aR3)}`}
           />
-          <circle cx="50" cy={getY(46200)} r="4" fill="#1d4ed8" />
-          <circle cx="200" cy={getY(44400)} r="4" fill="#1d4ed8" />
-          <circle cx="350" cy={getY(44400)} r="5" fill="#1d4ed8" stroke="#faf7ee" strokeWidth="2" />
+          <circle cx="50" cy={getY(aR1)} r="4" fill="#1d4ed8" />
+          <circle cx="200" cy={getY(aR2)} r="4" fill="#1d4ed8" />
+          <circle cx="350" cy={getY(aR3)} r="5" fill="#1d4ed8" stroke="#faf7ee" strokeWidth="2" />
 
           {/* Seller B line (Medium Royal Blue) */}
           <polyline
             fill="none"
             stroke="#1e3a8a"
             strokeWidth="2.5"
-            points={`50,${getY(49200)} 200,${getY(47400)} 350,${getY(47400)}`}
+            points={`50,${getY(bR1)} 200,${getY(bR2)} 350,${getY(bR3)}`}
           />
-          <circle cx="50" cy={getY(49200)} r="4" fill="#1e3a8a" />
-          <circle cx="200" cy={getY(47400)} r="4" fill="#1e3a8a" />
-          <circle cx="350" cy={getY(47400)} r="4" fill="#1e3a8a" />
+          <circle cx="50" cy={getY(bR1)} r="4" fill="#1e3a8a" />
+          <circle cx="200" cy={getY(bR2)} r="4" fill="#1e3a8a" />
+          <circle cx="350" cy={getY(bR3)} r="4" fill="#1e3a8a" />
 
           {/* Seller C line (Deep Navy) */}
           <polyline
@@ -192,11 +226,11 @@ export function PriceConvergenceChart() {
             stroke="#172554"
             strokeWidth="2"
             strokeDasharray="3 3"
-            points={`50,${getY(52800)} 200,${getY(50400)} 350,${getY(50400)}`}
+            points={`50,${getY(cR1)} 200,${getY(cR2)} 350,${getY(cR3)}`}
           />
-          <circle cx="50" cy={getY(52800)} r="4" fill="#172554" />
-          <circle cx="200" cy={getY(50400)} r="4" fill="#172554" />
-          <circle cx="350" cy={getY(50400)} r="4" fill="#172554" />
+          <circle cx="50" cy={getY(cR1)} r="4" fill="#172554" />
+          <circle cx="200" cy={getY(cR2)} r="4" fill="#172554" />
+          <circle cx="350" cy={getY(cR3)} r="4" fill="#172554" />
         </svg>
       </div>
 

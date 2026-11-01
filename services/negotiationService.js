@@ -20,11 +20,14 @@ export const negotiationService = {
     try {
       const res = await api.get(`/negotiations/${id}`);
       if (res?.data) {
-        activeNegotiationCache = { ...activeNegotiationCache, ...res.data };
+        activeNegotiationCache = res.data;
         return res;
       }
     } catch (err) {}
-    return { success: true, statusCode: 200, data: activeNegotiationCache };
+    if (activeNegotiationCache && activeNegotiationCache.id === id) {
+      return { success: true, statusCode: 200, data: activeNegotiationCache };
+    }
+    return { success: false, statusCode: 404, data: null };
   },
 
   create: async (data) => {
@@ -60,7 +63,7 @@ export const negotiationService = {
     try {
       const res = await api.post(`/negotiations/${id}/advance-round`, payload);
       if (res?.data) {
-        activeNegotiationCache = { ...activeNegotiationCache, ...res.data };
+        activeNegotiationCache = res.data;
         return res;
       }
     } catch (err) {}

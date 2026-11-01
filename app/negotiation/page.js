@@ -384,11 +384,11 @@ function NegotiationRoomContent() {
           <div className="flex flex-wrap items-center gap-3 text-xs text-[#1e3a8a] mt-2 font-mono">
             <span>Round {currentRound} of 3</span>
             <span>•</span>
-            <span className="text-[#1d4ed8] font-bold">Cap: {formatINR(negotiation?.maxBudget || 50000)}</span>
+            <span className="text-[#1d4ed8] font-bold">Cap: {formatINR(negotiation?.maxBudget || 0)}</span>
             <span>•</span>
             <span>Max SLA: {negotiation?.maxDeliveryHours || 48} Hours</span>
             <span>•</span>
-            <span className="text-[#172554] font-semibold">Target Qty: {negotiation?.targetQuantity || 12} units</span>
+            <span className="text-[#172554] font-semibold">Target Qty: {negotiation?.targetQuantity || 1} units</span>
           </div>
         </div>
 
@@ -521,7 +521,7 @@ function NegotiationRoomContent() {
           {/* Capital Allocation & Headroom Bar */}
           {(() => {
             const currentTotal = topRecommendedOffer ? Number(topRecommendedOffer.totalPrice) : 0;
-            const budgetCap = Number(negotiation?.maxBudget || 50000);
+            const budgetCap = Number(negotiation?.maxBudget || 0);
             return <BudgetAllocationBar currentTotal={currentTotal} budgetCap={budgetCap} />;
           })()}
 
@@ -548,9 +548,9 @@ function NegotiationRoomContent() {
           {/* Price Trajectory Trend Chart */}
           <Card
             title="Price Convergence Trajectory"
-            subtitle="Comparing seller quotes across rounds vs ₹50,000 budget cap"
+            subtitle={`Comparing seller quotes across rounds vs ${formatINR(negotiation?.maxBudget || 0)} budget cap`}
           >
-            <PriceConvergenceChart />
+            <PriceConvergenceChart offers={offers} budgetCap={Number(negotiation?.maxBudget || 0)} />
           </Card>
 
           {/* Multi-Attribute Utility Breakdown Chart */}
