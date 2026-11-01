@@ -10,7 +10,7 @@ import {
 // In-memory runtime cache for seamless offline/fallback state
 let agentsCache = [...INITIAL_AGENTS];
 let businessProfileCache = { ...INITIAL_BUSINESS_PROFILE };
-let productsCache = [...INITIAL_PRODUCTS];
+let productsCache = [];
 let auditLogsCache = [...INITIAL_AUDIT_LOGS];
 let threatRadarCache = { ...INITIAL_THREAT_RADAR };
 
@@ -79,27 +79,18 @@ export const productService = {
   getAll: async (params = {}) => {
     try {
       const res = await api.get('/products', { params });
-      if (res?.data?.products && res.data.products.length > 0) {
-        productsCache = res.data.products;
+      if (res?.data?.products !== undefined) {
         return res;
       }
-    } catch (err) {}
-
-    let filtered = [...productsCache];
-    if (params.category && params.category !== 'ALL') {
-      filtered = filtered.filter((p) => p.category.toLowerCase() === params.category.toLowerCase());
+    } catch (err) {
+      console.warn('Failed to fetch products from backend:', err?.message);
     }
-    if (params.search) {
-      const q = params.search.toLowerCase();
-      filtered = filtered.filter((p) => p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q));
-    }
-
     return {
       success: true,
       statusCode: 200,
       data: {
-        products: filtered,
-        total: filtered.length,
+        products: [],
+        total: 0,
         limit: params.limit || 50,
         offset: params.offset || 0,
       },
@@ -108,11 +99,26 @@ export const productService = {
 
   getById: async (id) => {
     try {
-      const res = await api.get(`/products/${id}`);
+      const res = await api.get('/products/' + id);
       if (res?.data) return res;
     } catch (err) {}
-    const product = productsCache.find((p) => p.id === id || p.sku === id) || productsCache[0];
-    return { success: true, statusCode: 200, data: product };
+    return { success: false, statusCode: 404, data: null };
+  },
+
+  getMyProducts: async () => {
+    return await api.get('/products/mine');
+  },
+
+  create: async (payload) => {
+    return await api.post('/products', payload);
+  },
+
+  update: async (id, payload) => {
+    return await api.put('/products/' + id, payload);
+  },
+
+  delete: async (id) => {
+    return await api.delete('/products/' + id);
   },
 };
 

@@ -20,77 +20,52 @@ export default function AgentStatusGrid({ agents = [], activeRound = 2 }) {
           ? 'Firm floor reached at ₹3,950/unit (20h expedited SLA)'
           : 'Submitted expedited quote of ₹4,100/unit';
       case 'SELLER_C_MALICIOUS':
-        return 'QUARANTINED: Disguised ₹12,000 logistics fee intercepted by SecurityEngine';
+        return 'QUARANTINED: Disguised ₹12,000 logistics fee intercepted by Zero-Trust Engine';
       default:
         return 'Monitoring negotiation channel';
     }
   };
 
-  const getAgentTheme = (agentType) => {
+  const getAgentLabel = (agentType) => {
     switch (agentType) {
       case 'BUYER':
-        return {
-          border: 'border-indigo-500/40 bg-indigo-950/20',
-          iconColor: 'text-indigo-400 bg-indigo-500/10 border-indigo-500/20',
-          badgeText: 'Enterprise Buyer',
-          accent: 'text-indigo-400',
-        };
+        return 'Enterprise Buyer';
       case 'SELLER_A_PRICE':
-        return {
-          border: 'border-emerald-500/40 bg-emerald-950/20',
-          iconColor: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
-          badgeText: 'Seller A (Price Focus)',
-          accent: 'text-emerald-400',
-        };
+        return 'Seller A (Price Focus)';
       case 'SELLER_B_SPEED_QUALITY':
-        return {
-          border: 'border-blue-500/40 bg-blue-950/20',
-          iconColor: 'text-blue-400 bg-blue-500/10 border-blue-500/20',
-          badgeText: 'Seller B (Speed/Quality)',
-          accent: 'text-blue-400',
-        };
+        return 'Seller B (Speed/Quality)';
       case 'SELLER_C_MALICIOUS':
-        return {
-          border: 'border-rose-500/40 bg-rose-950/20',
-          iconColor: 'text-rose-400 bg-rose-500/10 border-rose-500/20',
-          badgeText: 'Seller C (Adversarial)',
-          accent: 'text-rose-400',
-        };
+        return 'Seller C (Adversarial)';
       default:
-        return {
-          border: 'border-slate-800 bg-slate-900',
-          iconColor: 'text-slate-400 bg-slate-800',
-          badgeText: 'Independent Agent',
-          accent: 'text-slate-400',
-        };
+        return 'Autonomous Agent';
     }
   };
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
       {agents.map((agent) => {
-        const theme = getAgentTheme(agent.agentType);
         const isMalicious = agent.agentType === 'SELLER_C_MALICIOUS';
         const activity = getAgentActivity(agent.agentType);
+        const label = getAgentLabel(agent.agentType);
 
         return (
           <div
             key={agent.id}
-            className={`p-3.5 rounded-2xl border ${theme.border} backdrop-blur-sm relative overflow-hidden flex flex-col justify-between`}
+            className="p-3.5 rounded-2xl border border-[#1e3a8a]/20 bg-[#fffdf9] shadow-xs relative overflow-hidden flex flex-col justify-between text-[#172554]"
           >
             <div>
               {/* Top Row: Icon + Name + Status */}
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-2.5">
-                  <div className={`p-2 rounded-xl border ${theme.iconColor}`}>
-                    <Bot className="w-4 h-4" />
+                  <div className="p-2 rounded-xl border border-[#1e3a8a]/20 bg-[#f4efe3] text-[#1d4ed8]">
+                    <Bot className="w-4 h-4 text-[#1d4ed8]" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-slate-100 text-xs truncate max-w-[120px]">
+                    <h4 className="font-bold text-[#172554] text-xs truncate max-w-[120px]">
                       {agent.name.split(' (')[0]}
                     </h4>
-                    <span className="text-[10px] text-slate-400 font-mono block">
-                      {theme.badgeText}
+                    <span className="text-[10px] text-[#1e3a8a] font-mono block">
+                      {label}
                     </span>
                   </div>
                 </div>
@@ -100,42 +75,36 @@ export default function AgentStatusGrid({ agents = [], activeRound = 2 }) {
                 />
               </div>
 
-              {/* Model & Trust Score */}
-              <div className="mt-3 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px]">
-                <span className="font-mono text-slate-400 flex items-center gap-1">
-                  <Sparkles className="w-3 h-3 text-indigo-400" />
-                  {agent.modelName || 'gemini-2.0-flash'}
+              {/* Trust Score */}
+              <div className="mt-3 pt-2 border-t border-[#1e3a8a]/15 flex items-center justify-between text-[11px]">
+                <span className="font-mono text-[#1e3a8a] flex items-center gap-1">
+                  <Sparkles className="w-3 h-3 text-[#1d4ed8]" />
+                  {label}
                 </span>
-                <span
-                  className={`font-mono font-bold ${
-                    agent.trustScore < 50 ? 'text-rose-400' : 'text-emerald-400'
-                  }`}
-                >
+                <span className="font-mono font-bold text-[#172554]">
                   Trust: {agent.trustScore}%
                 </span>
               </div>
 
               {/* Progress bar for trust */}
-              <div className="w-full h-1 bg-slate-950 rounded-full overflow-hidden mt-1.5">
+              <div className="w-full h-1.5 bg-[#f4efe3] rounded-full overflow-hidden mt-1.5">
                 <div
-                  className={`h-full ${
-                    agent.trustScore < 50 ? 'bg-rose-500' : 'bg-emerald-500'
-                  }`}
+                  className="h-full bg-[#1d4ed8]"
                   style={{ width: `${Math.min(100, agent.trustScore)}%` }}
                 />
               </div>
 
               {/* Current Activity */}
-              <div className="mt-2.5 p-2 rounded-lg bg-slate-950/70 border border-slate-800/70 text-[10px] leading-relaxed">
-                <div className="flex items-center gap-1 font-mono text-slate-400 mb-0.5">
+              <div className="mt-2.5 p-2 rounded-lg bg-[#faf7ee] border border-[#1e3a8a]/20 text-[10px] leading-relaxed">
+                <div className="flex items-center gap-1 font-mono text-[#1e3a8a] mb-0.5">
                   {isMalicious ? (
-                    <AlertTriangle className="w-3 h-3 text-rose-400 shrink-0" />
+                    <AlertTriangle className="w-3 h-3 text-[#1d4ed8] shrink-0" />
                   ) : (
-                    <Clock className="w-3 h-3 text-indigo-400 shrink-0" />
+                    <Clock className="w-3 h-3 text-[#1d4ed8] shrink-0" />
                   )}
-                  <span>Live Status:</span>
+                  <span className="font-bold">Live Status:</span>
                 </div>
-                <p className={isMalicious ? 'text-rose-300 font-medium' : 'text-slate-300'}>
+                <p className="text-[#172554]">
                   {activity}
                 </p>
               </div>
@@ -146,4 +115,3 @@ export default function AgentStatusGrid({ agents = [], activeRound = 2 }) {
     </div>
   );
 }
-

@@ -30,7 +30,7 @@ export default function Modal({ isOpen, onClose, title, subtitle, children, maxW
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
             onClick={onClose}
-            className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm"
+            className="fixed inset-0 bg-[#172554]/40 backdrop-blur-xs"
           />
 
           {/* Modal Container */}
@@ -39,19 +39,19 @@ export default function Modal({ isOpen, onClose, title, subtitle, children, maxW
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
-            className={`relative w-full ${maxWidth} bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden z-10 my-8`}
+            className={`relative w-full ${maxWidth} bg-[#fffdf9] border border-[#1e3a8a]/30 rounded-2xl shadow-xl overflow-hidden z-10 my-8 text-[#172554]`}
           >
             {/* Header */}
             {(title || onClose) && (
-              <div className="flex items-center justify-between p-5 border-b border-slate-800/80 bg-slate-950/40">
+              <div className="flex items-center justify-between p-5 border-b border-[#1e3a8a]/15 bg-[#f4efe3]">
                 <div>
-                  {title && <h3 className="font-semibold text-slate-100 text-base">{title}</h3>}
-                  {subtitle && <p className="text-xs text-slate-400 mt-0.5">{subtitle}</p>}
+                  {title && <h3 className="font-bold text-[#172554] text-base">{title}</h3>}
+                  {subtitle && <p className="text-xs text-[#1e3a8a] mt-0.5">{subtitle}</p>}
                 </div>
                 <button
                   type="button"
                   onClick={onClose}
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-slate-100 hover:bg-slate-800 transition-colors"
+                  className="p-1.5 rounded-lg text-[#1e3a8a] hover:text-[#172554] hover:bg-[#eadecc] transition-colors"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -59,11 +59,10 @@ export default function Modal({ isOpen, onClose, title, subtitle, children, maxW
             )}
 
             {/* Content */}
-            <div className="p-5 max-h-[75vh] overflow-y-auto">{children}</div>
+            <div className="p-5 max-h-[75vh] overflow-y-auto text-[#172554]">{children}</div>
           </motion.div>
         </div>
       )}
     </AnimatePresence>
   );
 }
-

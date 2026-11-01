@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useUI } from '../../context/UIContext';
+import { useAuth } from '../../context/AuthContext';
 import { transactionService } from '../../services/transactionService';
 import {
   LayoutDashboard,
@@ -17,166 +18,342 @@ import {
   History,
   FileText,
   Boxes,
+  Package,
   X,
-  Radio,
+  Store,
+  LogOut,
+  LogIn,
+  Sliders,
+  ChevronRight,
 } from 'lucide-react';
 
 export default function Sidebar() {
   const pathname = usePathname();
   const { sidebarOpen, closeSidebar } = useUI();
+  const { user, isSeller, isAuthenticated, logout } = useAuth();
   const [pendingCount, setPendingCount] = useState(0);
+  const [isHovered, setIsHovered] = useState(false);
 
   useEffect(() => {
     let mounted = true;
-    transactionService
-      .getAll()
-      .then((res) => {
-        if (mounted && res?.data && Array.isArray(res.data)) {
-          const count = res.data.filter((t) => t.settlementStatus === 'PENDING_APPROVAL').length;
-          setPendingCount(count);
-        }
-      })
-      .catch(() => {});
+    if (!isSeller) {
+      transactionService
+        .getAll()
+        .then((res) => {
+          if (mounted && res?.data && Array.isArray(res.data)) {
+            const count = res.data.filter((t) => t.settlementStatus === 'PENDING_APPROVAL').length;
+            setPendingCount(count);
+          }
+        })
+        .catch(() => {});
+    }
 
     return () => {
       mounted = false;
     };
-  }, [pathname]);
+  }, [pathname, isSeller]);
 
-  const navItems = [
-    { href: '/', label: 'Overview Dashboard', icon: LayoutDashboard },
-    { href: '/profile', label: 'Business Profile', icon: Building2 },
-    { href: '/agents', label: 'Agent Management', icon: Bot, badge: '4 Agents' },
+  // Buyer Navigation
+  const buyerSections = [
     {
-      href: '/negotiation',
-      label: 'Live Negotiation Room',
-      icon: MessageSquareCode,
-      badge: 'Active',
-      badgeColor: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+      heading: 'Procurement',
+      items: [
+        { href: '/', label: 'Overview', icon: LayoutDashboard },
+        {
+          href: '/negotiation',
+          label: 'Live Negotiation',
+          icon: MessageSquareCode,
+          badge: 'Live',
+        },
+        { href: '/comparison', label: 'Offer Comparison', icon: Scale },
+        {
+          href: '/approvals',
+          label: 'Approvals',
+          icon: CheckCircle2,
+          badge: pendingCount > 0 ? String(pendingCount) : null,
+        },
+      ],
     },
-    { href: '/marketplace', label: 'Marketplace Catalog', icon: ShoppingBag, badge: '40 SKUs' },
-    { href: '/comparison', label: 'Offer Comparison', icon: Scale },
     {
-      href: '/security',
-      label: 'Security & Trust Center',
-      icon: ShieldCheck,
-      badge: 'Zero-Trust',
-      badgeColor: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
+      heading: 'Directory',
+      items: [
+        { href: '/marketplace', label: 'Marketplace', icon: ShoppingBag, count: '40' },
+        { href: '/agents', label: 'AI Agents', icon: Bot, count: '4' },
+        { href: '/profile', label: 'Organization', icon: Building2 },
+      ],
     },
     {
-      href: '/approvals',
-      label: 'Transaction Approval',
-      icon: CheckCircle2,
-      badge: pendingCount > 0 ? `${pendingCount} Pending` : null,
-      badgeColor: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+      heading: 'Security & Audit',
+      items: [
+        {
+          href: '/security',
+          label: 'Security Radar',
+          icon: ShieldCheck,
+          badge: 'Zero-Trust',
+        },
+        { href: '/history', label: 'Transactions', icon: History },
+        { href: '/audit', label: 'Audit Log', icon: FileText },
+      ],
     },
-    { href: '/history', label: 'Transaction History', icon: History },
-    { href: '/audit', label: 'Audit Trail Logs', icon: FileText },
   ];
 
-  const renderNavList = () => (
-    <div className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-      <div className="px-3 pb-2 text-[10px] font-bold text-slate-500 uppercase tracking-wider font-mono">
-        Autonomous Procurement
-      </div>
-      {navItems.map((item) => {
-        const Icon = item.icon;
-        const isActive = pathname === item.href;
-        return (
-          <Link
-            key={item.href}
-            href={item.href}
-            onClick={closeSidebar}
-            className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-medium transition-all group ${
-              isActive
-                ? 'bg-indigo-600/15 text-indigo-300 border border-indigo-500/30 shadow-sm'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
-            }`}
-          >
-            <div className="flex items-center gap-3">
-              <Icon
-                className={`w-4 h-4 transition-colors ${
-                  isActive ? 'text-indigo-400' : 'text-slate-400 group-hover:text-slate-300'
-                }`}
-              />
-              <span>{item.label}</span>
-            </div>
-            {item.badge && (
-              <span
-                className={`text-[10px] px-2 py-0.5 rounded-full font-mono font-medium border ${
-                  item.badgeColor || 'bg-slate-800 text-slate-400 border-slate-700/60'
-                }`}
-              >
-                {item.badge}
-              </span>
-            )}
-          </Link>
-        );
-      })}
-    </div>
-  );
+  // Seller Navigation
+  const sellerSections = [
+    {
+      heading: 'Supplier Operations',
+      items: [
+        { href: '/seller/dashboard', label: 'Supplier Hub', icon: Store },
+        { href: '/seller/products', label: 'Product Catalogue', icon: Package },
+        {
+          href: '/seller/negotiation',
+          label: 'Autonomous RFQs',
+          icon: MessageSquareCode,
+          badge: 'Live',
+        },
+        { href: '/seller/settings', label: 'Agent Settings', icon: Sliders },
+      ],
+    },
+    {
+      heading: 'Agent & Network',
+      items: [
+        { href: '/agents', label: 'My AI Agent', icon: Bot },
+      ],
+    },
+    {
+      heading: 'Settlement & Radar',
+      items: [
+        {
+          href: '/security',
+          label: 'Security Radar',
+          icon: ShieldCheck,
+          badge: 'Zero-Trust',
+        },
+        { href: '/history', label: 'History', icon: History },
+        { href: '/audit', label: 'Audit Log', icon: FileText },
+      ],
+    },
+  ];
+
+  const currentSections = isSeller ? sellerSections : buyerSections;
+  const isExpanded = isHovered || sidebarOpen;
 
   return (
     <>
-      {/* Desktop Persistent Sidebar */}
-      <aside className="hidden lg:flex w-64 bg-slate-950/95 border-r border-slate-800/80 flex-col shrink-0 min-h-screen sticky top-0 h-screen">
-        {/* Brand Header */}
-        <div className="h-16 flex items-center px-6 border-b border-slate-800/80 gap-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-500 flex items-center justify-center text-white shadow-indigo-500/25 shadow-lg">
-            <Boxes className="w-5 h-5" />
-          </div>
-          <div>
-            <span className="font-bold text-slate-100 tracking-tight text-base">AgentMart</span>
-            <span className="block text-[10px] text-indigo-400 font-mono font-medium uppercase tracking-wider">
-              Autonomous B2B
-            </span>
-          </div>
+      {/* Mobile Backdrop */}
+      {sidebarOpen && (
+        <div
+          onClick={closeSidebar}
+          className="fixed inset-0 bg-[#172554]/60 z-30 lg:hidden"
+        />
+      )}
+
+      {/* Main Sidebar - Fixed Height (h-screen), Hover to Open/Close on Desktop */}
+      <aside
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        className={`fixed lg:sticky top-0 left-0 h-screen z-40 bg-[#172554] border-r border-[#1e3a8a] text-[#faf7ee] flex flex-col justify-between shrink-0 transition-[width] duration-300 ease-in-out select-none shadow-xl lg:shadow-none ${
+          sidebarOpen ? 'translate-x-0 w-60' : '-translate-x-full lg:translate-x-0'
+        } ${
+          isHovered ? 'lg:w-60' : 'lg:w-[68px]'
+        }`}
+      >
+        {/* ========================================================= */}
+        {/* TOP: Brand Header                                         */}
+        {/* ========================================================= */}
+        <div className="h-14 min-h-[56px] max-h-[56px] shrink-0 px-3.5 border-b border-[#1e3a8a] flex items-center justify-between">
+          <Link
+            href={isSeller ? '/seller/dashboard' : '/'}
+            className={`flex items-center gap-2.5 overflow-hidden ${isExpanded ? '' : 'justify-center w-full'}`}
+          >
+            <div className="w-8 h-8 rounded-lg bg-[#faf7ee] flex items-center justify-center text-[#172554] font-bold text-xs shrink-0 shadow-xs">
+              <Boxes className="w-4 h-4 text-[#172554]" />
+            </div>
+            {isExpanded && (
+              <div className="flex items-center gap-1.5 transition-opacity duration-200">
+                <span className="text-sm font-bold text-[#faf7ee] tracking-tight">AgentMart</span>
+                <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-[#1e3a8a] text-[#faf7ee] border border-[#2563eb]/40 font-semibold">
+                  B2B
+                </span>
+              </div>
+            )}
+          </Link>
+
+          {/* Mobile Close Button */}
+          {sidebarOpen && (
+            <button
+              onClick={closeSidebar}
+              className="lg:hidden p-1 rounded-md text-[#dbeafe] hover:text-[#faf7ee] hover:bg-[#1e3a8a]"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
         </div>
 
-        {/* Navigation items */}
-        {renderNavList()}
-
-        {/* Footer Info */}
-        <div className="p-4 border-t border-slate-800/80 bg-slate-950/60 text-xs">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-slate-300 font-medium text-[11px]">Gemini 2.0 Engine</span>
+        {/* ========================================================= */}
+        {/* PORTAL / ORGANIZATION STATUS PILL                         */}
+        {/* ========================================================= */}
+        <div className="px-2.5 pt-2 pb-1 shrink-0">
+          {isExpanded ? (
+            <div className="px-2.5 py-1.5 rounded-lg bg-[#1e3a8a] border border-[#2563eb]/40 flex items-center justify-between text-xs text-[#faf7ee]">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="w-2 h-2 rounded-full bg-[#faf7ee] shrink-0" />
+                <span className="text-[#faf7ee] font-medium truncate text-[11px]">
+                  {isSeller ? (user?.business?.name || 'Supplier Network') : (user?.business?.name || 'Enterprise')}
+                </span>
+              </div>
+              <span className="text-[9px] font-mono uppercase px-1 rounded bg-[#172554] text-[#faf7ee] border border-[#2563eb]/30 shrink-0">
+                {isSeller ? 'Seller' : 'Buyer'}
+              </span>
             </div>
-            <span className="text-[10px] text-slate-500 font-mono">v1.0</span>
-          </div>
-          <div className="mt-1.5 text-[10px] text-slate-500 font-mono">
-            Autonomous Procurement / Zero-Trust
-          </div>
+          ) : (
+            <div
+              title={isSeller ? `Seller: ${user?.business?.name || 'Supplier'}` : `Buyer: ${user?.business?.name || 'Enterprise'}`}
+              className="w-9 h-7 rounded-lg bg-[#1e3a8a] border border-[#2563eb]/30 mx-auto flex items-center justify-center text-[10px] font-mono font-bold text-[#faf7ee]"
+            >
+              {isSeller ? 'S' : 'B'}
+            </div>
+          )}
+        </div>
+
+        {/* ========================================================= */}
+        {/* MIDDLE: Nav Sections (Only this inner list scrolls if tiny)*/}
+        {/* ========================================================= */}
+        <div className="flex-1 px-2.5 py-2 space-y-3 overflow-y-auto overflow-x-hidden custom-scrollbar">
+          {currentSections.map((sec, sIdx) => (
+            <div key={sIdx} className="space-y-0.5">
+              {isExpanded ? (
+                <div className="px-2 py-1 text-[10px] font-semibold text-[#bfdbfe] uppercase tracking-wider font-mono">
+                  {sec.heading}
+                </div>
+              ) : (
+                sIdx > 0 && <div className="h-px bg-[#1e3a8a]/40 my-2 mx-1" />
+              )}
+
+              {sec.items.map((item) => {
+                const Icon = item.icon;
+                const isActive = pathname === item.href;
+
+                return isExpanded ? (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={closeSidebar}
+                    className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                      isActive
+                        ? 'bg-[#faf7ee] text-[#172554] font-semibold shadow-xs'
+                        : 'text-[#dbeafe] hover:text-[#faf7ee] hover:bg-[#1e3a8a]'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <Icon
+                        className={`w-4 h-4 shrink-0 ${
+                          isActive ? 'text-[#172554]' : 'text-[#bfdbfe]'
+                        }`}
+                      />
+                      <span className="truncate whitespace-nowrap">{item.label}</span>
+                    </div>
+
+                    {item.badge ? (
+                      <span
+                        className={`text-[9px] px-1.5 py-0.2 rounded font-mono font-medium border shrink-0 ${
+                          isActive
+                            ? 'bg-[#172554] text-[#faf7ee] border-[#172554]'
+                            : 'bg-[#1e3a8a] text-[#faf7ee] border-[#2563eb]/50'
+                        }`}
+                      >
+                        {item.badge}
+                      </span>
+                    ) : item.count ? (
+                      <span className={`text-[10px] font-mono shrink-0 ${isActive ? 'text-[#172554]' : 'text-[#bfdbfe]'}`}>
+                        {item.count}
+                      </span>
+                    ) : null}
+                  </Link>
+                ) : (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={closeSidebar}
+                    title={item.label}
+                    className={`flex items-center justify-center w-10 h-9 mx-auto rounded-lg transition-colors relative ${
+                      isActive
+                        ? 'bg-[#faf7ee] text-[#172554] shadow-xs'
+                        : 'text-[#bfdbfe] hover:text-[#faf7ee] hover:bg-[#1e3a8a]'
+                    }`}
+                  >
+                    <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-[#172554]' : 'text-[#bfdbfe]'}`} />
+                    {item.badge && (
+                      <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-[#1d4ed8]" />
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+
+        {/* ========================================================= */}
+        {/* BOTTOM: Pinned User Footer & Logout Button (Always Visible) */}
+        {/* ========================================================= */}
+        <div className="shrink-0 p-2.5 border-t border-[#1e3a8a] bg-[#131f47]">
+          {isAuthenticated ? (
+            isExpanded ? (
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="w-7 h-7 rounded-md flex items-center justify-center bg-[#faf7ee] text-[#172554] shrink-0 font-bold text-xs shadow-xs">
+                    {user?.name ? user.name[0].toUpperCase() : 'U'}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-[#faf7ee] font-semibold text-xs truncate leading-tight">
+                      {user?.name}
+                    </div>
+                    <div className="text-[10px] text-[#bfdbfe] truncate font-mono">
+                      {user?.accountType || (isSeller ? 'SELLER' : 'BUYER')}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    onClick={logout}
+                    title="Sign Out"
+                    className="p-1.5 rounded-md text-[#bfdbfe] hover:text-[#faf7ee] hover:bg-[#1e3a8a] transition-colors"
+                  >
+                    <LogOut className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center gap-1.5 py-0.5">
+                <div
+                  title={`${user?.name} (${user?.accountType || (isSeller ? 'SELLER' : 'BUYER')})`}
+                  className="w-7 h-7 rounded-md flex items-center justify-center bg-[#faf7ee] text-[#172554] shrink-0 font-bold text-xs shadow-xs"
+                >
+                  {user?.name ? user.name[0].toUpperCase() : 'U'}
+                </div>
+                <button
+                  onClick={logout}
+                  title="Sign Out"
+                  className="p-1.5 rounded-md text-[#bfdbfe] hover:text-[#faf7ee] hover:bg-[#1e3a8a] transition-colors"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
+              </div>
+            )
+          ) : (
+            <Link
+              href="/login"
+              title="Sign In"
+              className={`rounded-lg bg-[#faf7ee] text-[#172554] font-semibold text-xs flex items-center justify-center gap-1.5 transition-colors ${
+                isExpanded ? 'w-full py-1.5 px-3' : 'w-9 h-8 mx-auto'
+              }`}
+            >
+              <LogIn className="w-3.5 h-3.5 text-[#172554]" />
+              {isExpanded && <span>Sign In</span>}
+            </Link>
+          )}
         </div>
       </aside>
-
-      {/* Mobile Drawer Overlay */}
-      {sidebarOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden flex">
-          <div
-            className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm transition-opacity"
-            onClick={closeSidebar}
-          />
-          <div className="relative w-72 bg-slate-950 border-r border-slate-800 flex flex-col h-full z-10 shadow-2xl animate-in slide-in-from-left duration-200">
-            <div className="h-16 flex items-center justify-between px-6 border-b border-slate-800">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white">
-                  <Boxes className="w-4 h-4" />
-                </div>
-                <span className="font-bold text-slate-100 text-sm">AgentMart</span>
-              </div>
-              <button
-                onClick={closeSidebar}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            {renderNavList()}
-          </div>
-        </div>
-      )}
     </>
   );
 }

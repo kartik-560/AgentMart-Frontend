@@ -16,7 +16,7 @@ export function UtilityBreakdownChart({ offers = [] }) {
   ];
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 text-[#172554]">
       {offers.map((offer) => {
         const isMalicious = offer.sellerAgentId?.includes('seller-c') || offer.status === 'FLAGGED';
         const isWinner = offer.isRecommended;
@@ -24,33 +24,33 @@ export function UtilityBreakdownChart({ offers = [] }) {
         return (
           <div
             key={offer.id || offer.sellerAgentId}
-            className={`p-3.5 rounded-xl border text-xs ${
+            className={`p-3.5 rounded-xl border text-xs shadow-xs ${
               isWinner
-                ? 'bg-emerald-950/20 border-emerald-500/40'
+                ? 'bg-[#fffdf9] border-2 border-[#1d4ed8]'
                 : isMalicious
-                ? 'bg-rose-950/20 border-rose-900/40'
-                : 'bg-slate-900/60 border-slate-800'
+                ? 'bg-[#faf7ee] border border-[#172554]/40'
+                : 'bg-[#faf7ee] border border-[#1e3a8a]/20'
             }`}
           >
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
-                <span className={`font-semibold ${isWinner ? 'text-emerald-400' : isMalicious ? 'text-rose-400' : 'text-slate-200'}`}>
+                <span className="font-bold text-[#172554]">
                   {offer.sellerName || offer.name || offer.sellerAgentId}
                 </span>
                 {isWinner && (
-                  <span className="px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 text-[10px] font-mono">
+                  <span className="px-1.5 py-0.2 rounded bg-[#1d4ed8] text-[#faf7ee] text-[10px] font-mono font-bold">
                     RECOMMENDED
                   </span>
                 )}
                 {isMalicious && (
-                  <span className="px-1.5 py-0.2 rounded bg-rose-500/10 text-rose-400 border border-rose-500/30 text-[10px] font-mono">
-                    SECURITY BREACH
+                  <span className="px-1.5 py-0.2 rounded bg-[#f4efe3] text-[#172554] border border-[#1e3a8a]/30 text-[10px] font-mono font-bold">
+                    SECURITY QUARANTINE
                   </span>
                 )}
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-slate-400 text-[11px]">Utility:</span>
-                <span className={`font-mono font-bold text-sm ${isWinner ? 'text-emerald-400' : isMalicious ? 'text-rose-400' : 'text-indigo-400'}`}>
+                <span className="text-[#1e3a8a] text-[11px]">Utility:</span>
+                <span className="font-mono font-bold text-sm text-[#1d4ed8]">
                   {offer.utilityScore ? offer.utilityScore.toFixed(1) : '0.0'} / 100
                 </span>
               </div>
@@ -62,19 +62,13 @@ export function UtilityBreakdownChart({ offers = [] }) {
                 const subScore = offer.subScores ? offer.subScores[cat.key] || 0 : 0;
                 return (
                   <div key={cat.key} className="space-y-1">
-                    <div className="flex justify-between text-[10px] text-slate-400">
+                    <div className="flex justify-between text-[10px] text-[#1e3a8a]">
                       <span>{cat.label}</span>
-                      <span className="font-mono text-slate-300">{subScore.toFixed(0)}%</span>
+                      <span className="font-mono font-bold text-[#172554]">{subScore.toFixed(0)}%</span>
                     </div>
-                    <div className="w-full h-1.5 bg-slate-950 rounded-full overflow-hidden">
+                    <div className="w-full h-1.5 bg-[#f4efe3] rounded-full overflow-hidden">
                       <div
-                        className={`h-full rounded-full transition-all duration-500 ${
-                          isMalicious
-                            ? 'bg-rose-500'
-                            : isWinner
-                            ? 'bg-emerald-400'
-                            : 'bg-indigo-500'
-                        }`}
+                        className="h-full rounded-full bg-[#1d4ed8] transition-all duration-500"
                         style={{ width: `${Math.min(100, Math.max(0, subScore))}%` }}
                       />
                     </div>
@@ -98,28 +92,26 @@ export function BudgetAllocationBar({ currentTotal, budgetCap = 50000 }) {
   const remaining = budgetCap - currentTotal;
 
   return (
-    <div className="p-4 rounded-xl bg-slate-950/80 border border-slate-800 space-y-2 text-xs">
+    <div className="px-4 py-2 rounded-xl bg-[#faf7ee] border border-[#1e3a8a]/20 space-y-1.5 text-xs text-[#172554]">
       <div className="flex items-center justify-between">
-        <span className="text-slate-400 font-medium">Deterministic Capital Boundary</span>
-        <span className="font-mono text-slate-300">
-          Ceiling: <strong className="text-white">{formatINR(budgetCap)}</strong>
+        <span className="text-[#1e3a8a] text-[11px] font-medium">Deterministic Capital Boundary</span>
+        <span className="font-mono text-[11px] text-[#172554]">
+          Ceiling: <strong className="text-[#172554] font-bold">{formatINR(budgetCap)}</strong>
         </span>
       </div>
 
-      <div className="w-full h-3 bg-slate-900 rounded-full overflow-hidden p-0.5 border border-slate-800">
+      <div className="w-full h-2 bg-[#f4efe3] rounded-full overflow-hidden p-0.5 border border-[#1e3a8a]/20">
         <div
-          className={`h-full rounded-full transition-all duration-500 ${
-            isOver ? 'bg-rose-500' : percentUsed > 90 ? 'bg-amber-400' : 'bg-emerald-400'
-          }`}
+          className="h-full rounded-full bg-[#1d4ed8] transition-all duration-500"
           style={{ width: `${Math.min(100, percentUsed)}%` }}
         />
       </div>
 
-      <div className="flex justify-between items-center text-[11px]">
-        <span className="text-slate-400">
-          Committed: <strong className="font-mono text-slate-200">{formatINR(currentTotal)}</strong> ({percentUsed}%)
+      <div className="flex justify-between items-center text-[10px]">
+        <span className="text-[#1e3a8a]">
+          Committed: <strong className="font-mono text-[#172554] font-bold">{formatINR(currentTotal)}</strong> ({percentUsed}%)
         </span>
-        <span className={isOver ? 'text-rose-400 font-bold font-mono' : 'text-emerald-400 font-mono font-medium'}>
+        <span className="font-mono font-bold text-[#1d4ed8]">
           {isOver ? `Breach: +${formatINR(Math.abs(remaining))}` : `Headroom: ${formatINR(remaining)} under cap`}
         </span>
       </div>
@@ -131,12 +123,6 @@ export function BudgetAllocationBar({ currentTotal, budgetCap = 50000 }) {
  * Round-by-Round Price Convergence Trend Line Chart (SVG)
  */
 export function PriceConvergenceChart() {
-  const rounds = [
-    { round: 'Round 1 (Initial)', sellerA: 46200, sellerB: 49200, sellerC: 52800 },
-    { round: 'Round 2 (Counter)', sellerA: 44400, sellerB: 47400, sellerC: 50400 },
-    { round: 'Round 3 (Final)', sellerA: 44400, sellerB: 47400, sellerC: 50400 },
-  ];
-
   const minVal = 42000;
   const maxVal = 55000;
   const range = maxVal - minVal;
@@ -144,25 +130,25 @@ export function PriceConvergenceChart() {
   const getY = (val) => 120 - ((val - minVal) / range) * 100;
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between text-xs text-slate-400">
-        <div className="flex items-center gap-4">
-          <span className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400" /> Seller A (Price Focus)
+    <div className="space-y-3 text-[#172554]">
+      <div className="flex flex-wrap items-center justify-between text-xs text-[#1e3a8a] gap-2">
+        <div className="flex flex-wrap items-center gap-4">
+          <span className="flex items-center gap-1.5 font-medium text-[#172554]">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#1d4ed8]" /> Seller A (Price Focus)
           </span>
-          <span className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-blue-400" /> Seller B (Speed/Quality)
+          <span className="flex items-center gap-1.5 font-medium text-[#172554]">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#1e3a8a]" /> Seller B (Speed/Quality)
           </span>
-          <span className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-rose-400" /> Seller C (Malicious + Hidden Fee)
+          <span className="flex items-center gap-1.5 font-medium text-[#172554]">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#172554]" /> Seller C (Malicious Simulation)
           </span>
         </div>
-        <span className="font-mono text-[11px] text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded bg-amber-500/10">
+        <span className="font-mono text-[11px] text-[#172554] border border-[#1e3a8a]/25 px-2 py-0.5 rounded bg-[#f4efe3] font-bold">
           Max Budget Cap: ₹50,000
         </span>
       </div>
 
-      <div className="relative h-36 w-full bg-slate-950/60 rounded-xl border border-slate-800 p-2">
+      <div className="relative h-36 w-full bg-[#faf7ee] rounded-xl border border-[#1e3a8a]/20 p-2">
         <svg viewBox="0 0 400 130" className="w-full h-full overflow-visible">
           {/* Budget ceiling line */}
           <line
@@ -170,51 +156,51 @@ export function PriceConvergenceChart() {
             y1={getY(50000)}
             x2="380"
             y2={getY(50000)}
-            stroke="#f59e0b"
+            stroke="#172554"
             strokeDasharray="4 4"
             strokeWidth="1.5"
           />
-          <text x="382" y={getY(50000) + 3} fill="#f59e0b" fontSize="8" fontFamily="monospace">
+          <text x="382" y={getY(50000) + 3} fill="#172554" fontSize="8" fontFamily="monospace" fontWeight="bold">
             ₹50k Cap
           </text>
 
-          {/* Seller A line (Emerald) */}
+          {/* Seller A line (Primary Royal Blue) */}
           <polyline
             fill="none"
-            stroke="#34d399"
+            stroke="#1d4ed8"
             strokeWidth="2.5"
             points={`50,${getY(46200)} 200,${getY(44400)} 350,${getY(44400)}`}
           />
-          <circle cx="50" cy={getY(46200)} r="4" fill="#34d399" />
-          <circle cx="200" cy={getY(44400)} r="4" fill="#34d399" />
-          <circle cx="350" cy={getY(44400)} r="5" fill="#34d399" stroke="#0f172a" strokeWidth="2" />
+          <circle cx="50" cy={getY(46200)} r="4" fill="#1d4ed8" />
+          <circle cx="200" cy={getY(44400)} r="4" fill="#1d4ed8" />
+          <circle cx="350" cy={getY(44400)} r="5" fill="#1d4ed8" stroke="#faf7ee" strokeWidth="2" />
 
-          {/* Seller B line (Blue) */}
+          {/* Seller B line (Medium Royal Blue) */}
           <polyline
             fill="none"
-            stroke="#60a5fa"
+            stroke="#1e3a8a"
             strokeWidth="2.5"
             points={`50,${getY(49200)} 200,${getY(47400)} 350,${getY(47400)}`}
           />
-          <circle cx="50" cy={getY(49200)} r="4" fill="#60a5fa" />
-          <circle cx="200" cy={getY(47400)} r="4" fill="#60a5fa" />
-          <circle cx="350" cy={getY(47400)} r="4" fill="#60a5fa" />
+          <circle cx="50" cy={getY(49200)} r="4" fill="#1e3a8a" />
+          <circle cx="200" cy={getY(47400)} r="4" fill="#1e3a8a" />
+          <circle cx="350" cy={getY(47400)} r="4" fill="#1e3a8a" />
 
-          {/* Seller C line (Rose) */}
+          {/* Seller C line (Deep Navy) */}
           <polyline
             fill="none"
-            stroke="#f43f5e"
+            stroke="#172554"
             strokeWidth="2"
             strokeDasharray="3 3"
             points={`50,${getY(52800)} 200,${getY(50400)} 350,${getY(50400)}`}
           />
-          <circle cx="50" cy={getY(52800)} r="4" fill="#f43f5e" />
-          <circle cx="200" cy={getY(50400)} r="4" fill="#f43f5e" />
-          <circle cx="350" cy={getY(50400)} r="4" fill="#f43f5e" />
+          <circle cx="50" cy={getY(52800)} r="4" fill="#172554" />
+          <circle cx="200" cy={getY(50400)} r="4" fill="#172554" />
+          <circle cx="350" cy={getY(50400)} r="4" fill="#172554" />
         </svg>
       </div>
 
-      <div className="flex justify-between text-[11px] text-slate-500 px-6 font-mono">
+      <div className="flex justify-between text-[11px] text-[#1e3a8a] px-6 font-mono font-medium">
         <span>Round 1 Quotes</span>
         <span>Round 2 Counter-Offers</span>
         <span>Round 3 Final Agreement</span>
@@ -229,32 +215,28 @@ export function PriceConvergenceChart() {
 export function ProfitMarginMeter({ costPrice, sellingPrice, label = 'Projected Resale Margin' }) {
   const profit = sellingPrice - costPrice;
   const marginPercent = sellingPrice > 0 ? ((profit / sellingPrice) * 100).toFixed(1) : 0;
-  const isHealthy = marginPercent >= 20;
 
   return (
-    <div className="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800 space-y-2">
+    <div className="p-3.5 rounded-xl bg-[#faf7ee] border border-[#1e3a8a]/20 space-y-2 text-[#172554]">
       <div className="flex items-center justify-between text-xs">
-        <span className="text-slate-400 font-medium">{label}</span>
-        <span className={`font-mono font-bold ${isHealthy ? 'text-emerald-400' : 'text-amber-400'}`}>
+        <span className="text-[#1e3a8a] font-medium">{label}</span>
+        <span className="font-mono font-bold text-[#1d4ed8]">
           {marginPercent}%
         </span>
       </div>
 
-      <div className="w-full h-2 bg-slate-900 rounded-full overflow-hidden">
+      <div className="w-full h-2 bg-[#f4efe3] rounded-full overflow-hidden">
         <div
-          className={`h-full rounded-full transition-all duration-500 ${
-            isHealthy ? 'bg-emerald-500' : 'bg-amber-500'
-          }`}
+          className="h-full rounded-full bg-[#1d4ed8] transition-all duration-500"
           style={{ width: `${Math.min(100, Math.max(0, marginPercent * 2.5))}%` }}
         />
       </div>
 
-      <div className="flex justify-between text-[11px] text-slate-400 pt-0.5">
+      <div className="flex justify-between text-[11px] text-[#1e3a8a] pt-0.5">
         <span>Procurement Cost: {formatINR(costPrice)}</span>
         <span>Resale: {formatINR(sellingPrice)}</span>
-        <span className="text-emerald-400 font-mono font-semibold">Net Profit: +{formatINR(profit)}</span>
+        <span className="text-[#1d4ed8] font-mono font-bold">Net Profit: +{formatINR(profit)}</span>
       </div>
     </div>
   );
 }
-

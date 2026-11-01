@@ -6,20 +6,12 @@ import Button from '../../components/shared/Button';
 import StatusBadge from '../../components/shared/StatusBadge';
 import { useBusiness } from '../../context/BusinessContext';
 import { useUI } from '../../context/UIContext';
-import { formatINR } from '../../utils/formatters';
 import { businessService } from '../../services/agentService';
 import {
   Building2,
   Save,
   Brain,
-  CheckCircle,
-  ShieldCheck,
-  Sliders,
   Award,
-  TrendingUp,
-  History,
-  AlertCircle,
-  RotateCcw,
 } from 'lucide-react';
 
 export default function BusinessProfilePage() {
@@ -116,21 +108,21 @@ export default function BusinessProfilePage() {
   const totalWeight = weights.price + weights.delivery + weights.quality + weights.reliability;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 text-[#172554]">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-100 flex items-center gap-2">
-            <Building2 className="w-6 h-6 text-indigo-400 shrink-0" /> Business Profile & Procurement Intelligence
+          <h1 className="text-xl sm:text-2xl font-black text-[#172554] flex items-center gap-2">
+            <Building2 className="w-6 h-6 text-[#1d4ed8] shrink-0" /> Business Profile & Procurement Intelligence
           </h1>
-          <p className="text-xs sm:text-sm text-slate-400 mt-1">
+          <p className="text-xs sm:text-sm text-[#1e3a8a] mt-1">
             Enterprise procurement identity, deterministic constraints, multi-criteria objective weights, and Business Memory.
           </p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left Column: Commercial Constraints & Weighting Sliders (8 Cols) */}
+        {/* Left Column: Commercial Constraints & Weighting Sliders */}
         <div className="lg:col-span-7 xl:col-span-8 space-y-6">
           {/* Main Parameters Form */}
           <Card
@@ -140,46 +132,45 @@ export default function BusinessProfilePage() {
             <form onSubmit={handleSaveProfile} className="space-y-4 text-xs">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1">
+                  <label className="block text-xs font-bold text-[#172554] mb-1">
                     Enterprise Legal Name
                   </label>
                   <input
                     type="text"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-slate-100 text-xs focus:outline-none focus:border-indigo-500"
+                    className="w-full px-3 py-2 bg-[#faf7ee] border border-[#1e3a8a]/30 rounded-lg text-[#172554] text-xs focus:outline-none focus:border-[#1d4ed8]"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1">
+                  <label className="block text-xs font-bold text-[#172554] mb-1">
                     GST / Business Registration ID
                   </label>
                   <input
                     type="text"
                     readOnly
                     value={formData.registrationNumber}
-                    className="w-full px-3 py-2 bg-slate-950/50 border border-slate-800 rounded-lg text-slate-400 font-mono text-xs cursor-not-allowed"
+                    className="w-full px-3 py-2 bg-[#f4efe3] border border-[#1e3a8a]/20 rounded-lg text-[#1e3a8a] font-mono text-xs cursor-not-allowed"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
                 <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1">
+                  <label className="block text-xs font-bold text-[#172554] mb-1">
                     Budget Ceiling (INR)
                   </label>
                   <input
                     type="number"
-                    
                     value={formData.budgetLimit}
                     onChange={(e) => setFormData({ ...formData, budgetLimit: Number(e.target.value) })}
-                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-emerald-400 font-mono font-bold text-xs focus:outline-none focus:border-indigo-500"
+                    className="w-full px-3 py-2 bg-[#faf7ee] border border-[#1e3a8a]/30 rounded-lg text-[#1d4ed8] font-mono font-bold text-xs focus:outline-none focus:border-[#1d4ed8]"
                   />
-                  <span className="text-[10px] text-emerald-400">Unrestricted Procurement Budget</span>
+                  <span className="text-[10px] text-[#1e3a8a]">Unrestricted Procurement Budget</span>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1">
+                  <label className="block text-xs font-bold text-[#172554] mb-1">
                     Target Resale Margin (%)
                   </label>
                   <input
@@ -187,34 +178,34 @@ export default function BusinessProfilePage() {
                     step="0.5"
                     value={formData.targetResaleMargin}
                     onChange={(e) => setFormData({ ...formData, targetResaleMargin: Number(e.target.value) })}
-                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-slate-100 font-mono text-xs focus:outline-none focus:border-indigo-500"
+                    className="w-full px-3 py-2 bg-[#faf7ee] border border-[#1e3a8a]/30 rounded-lg text-[#172554] font-mono text-xs focus:outline-none focus:border-[#1d4ed8]"
                   />
-                  <span className="text-[10px] text-slate-500">Minimum Floor: 18.0%</span>
+                  <span className="text-[10px] text-[#1e3a8a]">Minimum Floor: 18.0%</span>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1">
+                  <label className="block text-xs font-bold text-[#172554] mb-1">
                     Max Delivery SLA (Hours)
                   </label>
                   <input
                     type="number"
                     value={formData.maxDeliveryHours}
                     onChange={(e) => setFormData({ ...formData, maxDeliveryHours: Number(e.target.value) })}
-                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-slate-100 font-mono text-xs focus:outline-none focus:border-indigo-500"
+                    className="w-full px-3 py-2 bg-[#faf7ee] border border-[#1e3a8a]/30 rounded-lg text-[#172554] font-mono text-xs focus:outline-none focus:border-[#1d4ed8]"
                   />
-                  <span className="text-[10px] text-slate-500">Max limit: 48 hours</span>
+                  <span className="text-[10px] text-[#1e3a8a]">Max limit: 48 hours</span>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                 <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1">
+                  <label className="block text-xs font-bold text-[#172554] mb-1">
                     Risk Tolerance Strategy
                   </label>
                   <select
                     value={formData.riskTolerance}
                     onChange={(e) => setFormData({ ...formData, riskTolerance: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-slate-100 text-xs focus:outline-none focus:border-indigo-500"
+                    className="w-full px-3 py-2 bg-[#faf7ee] border border-[#1e3a8a]/30 rounded-lg text-[#172554] text-xs focus:outline-none focus:border-[#1d4ed8]"
                   >
                     <option value="CONSERVATIVE">Conservative (Strict Quality & SLA)</option>
                     <option value="BALANCED">Balanced (Optimized Value & Speed)</option>
@@ -222,20 +213,20 @@ export default function BusinessProfilePage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1">
+                  <label className="block text-xs font-bold text-[#172554] mb-1">
                     Settlement Protocol
                   </label>
                   <input
                     type="text"
                     readOnly
                     value="MOCK_UPI (Mandatory Escrow Validation)"
-                    className="w-full px-3 py-2 bg-slate-950/50 border border-slate-800 rounded-lg text-indigo-400 font-mono text-xs cursor-not-allowed"
+                    className="w-full px-3 py-2 bg-[#f4efe3] border border-[#1e3a8a]/20 rounded-lg text-[#1d4ed8] font-mono text-xs cursor-not-allowed font-bold"
                   />
                 </div>
               </div>
 
               <div className="pt-3 flex justify-end">
-                <Button type="submit" variant="primary" size="sm" loading={saving} className="gap-2">
+                <Button type="submit" variant="primary" size="sm" loading={saving} className="gap-2 font-bold">
                   <Save className="w-4 h-4" /> Save Profile Constraints
                 </Button>
               </div>
@@ -250,8 +241,8 @@ export default function BusinessProfilePage() {
               <span
                 className={`font-mono text-xs px-2.5 py-0.5 rounded-full border ${
                   totalWeight === 100
-                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 font-bold'
-                    : 'bg-rose-500/10 text-rose-400 border-rose-500/30'
+                    ? 'bg-[#f4efe3] text-[#1d4ed8] border-[#1e3a8a]/30 font-bold'
+                    : 'bg-[#faf7ee] text-[#172554] border-[#1e3a8a]/20'
                 }`}
               >
                 Sum: {totalWeight}% {totalWeight === 100 ? '✓' : '(Must equal 100%)'}
@@ -262,8 +253,8 @@ export default function BusinessProfilePage() {
               {/* Price weight */}
               <div>
                 <div className="flex justify-between mb-1">
-                  <span className="text-slate-300 font-medium">Price & Resale Margin Weight (wp)</span>
-                  <span className="font-mono text-emerald-400 font-bold">{weights.price}%</span>
+                  <span className="text-[#172554] font-bold">Price & Resale Margin Weight (wp)</span>
+                  <span className="font-mono text-[#1d4ed8] font-bold">{weights.price}%</span>
                 </div>
                 <input
                   type="range"
@@ -271,15 +262,15 @@ export default function BusinessProfilePage() {
                   max="70"
                   value={weights.price}
                   onChange={(e) => setWeights({ ...weights, price: Number(e.target.value) })}
-                  className="w-full h-1.5 bg-slate-950 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                  className="w-full h-1.5 bg-[#f4efe3] rounded-lg appearance-none cursor-pointer accent-[#1d4ed8]"
                 />
               </div>
 
               {/* Delivery weight */}
               <div>
                 <div className="flex justify-between mb-1">
-                  <span className="text-slate-300 font-medium">Delivery Speed SLA Weight (wd)</span>
-                  <span className="font-mono text-blue-400 font-bold">{weights.delivery}%</span>
+                  <span className="text-[#172554] font-bold">Delivery Speed SLA Weight (wd)</span>
+                  <span className="font-mono text-[#1d4ed8] font-bold">{weights.delivery}%</span>
                 </div>
                 <input
                   type="range"
@@ -287,15 +278,15 @@ export default function BusinessProfilePage() {
                   max="50"
                   value={weights.delivery}
                   onChange={(e) => setWeights({ ...weights, delivery: Number(e.target.value) })}
-                  className="w-full h-1.5 bg-slate-950 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                  className="w-full h-1.5 bg-[#f4efe3] rounded-lg appearance-none cursor-pointer accent-[#1d4ed8]"
                 />
               </div>
 
               {/* Quality weight */}
               <div>
                 <div className="flex justify-between mb-1">
-                  <span className="text-slate-300 font-medium">Product Quality & Warranty Weight (wq)</span>
-                  <span className="font-mono text-indigo-400 font-bold">{weights.quality}%</span>
+                  <span className="text-[#172554] font-bold">Product Quality & Warranty Weight (wq)</span>
+                  <span className="font-mono text-[#1d4ed8] font-bold">{weights.quality}%</span>
                 </div>
                 <input
                   type="range"
@@ -303,15 +294,15 @@ export default function BusinessProfilePage() {
                   max="40"
                   value={weights.quality}
                   onChange={(e) => setWeights({ ...weights, quality: Number(e.target.value) })}
-                  className="w-full h-1.5 bg-slate-950 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                  className="w-full h-1.5 bg-[#f4efe3] rounded-lg appearance-none cursor-pointer accent-[#1d4ed8]"
                 />
               </div>
 
               {/* Reliability weight */}
               <div>
                 <div className="flex justify-between mb-1">
-                  <span className="text-slate-300 font-medium">Supplier Historical Reliability (wr)</span>
-                  <span className="font-mono text-amber-400 font-bold">{weights.reliability}%</span>
+                  <span className="text-[#172554] font-bold">Supplier Historical Reliability (wr)</span>
+                  <span className="font-mono text-[#1d4ed8] font-bold">{weights.reliability}%</span>
                 </div>
                 <input
                   type="range"
@@ -319,7 +310,7 @@ export default function BusinessProfilePage() {
                   max="30"
                   value={weights.reliability}
                   onChange={(e) => setWeights({ ...weights, reliability: Number(e.target.value) })}
-                  className="w-full h-1.5 bg-slate-950 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                  className="w-full h-1.5 bg-[#f4efe3] rounded-lg appearance-none cursor-pointer accent-[#1d4ed8]"
                 />
               </div>
             </div>
@@ -331,38 +322,38 @@ export default function BusinessProfilePage() {
             subtitle="Comparing underlying enterprise postures across competing supplier bots"
           >
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 text-xs">
-              <div className="p-3.5 rounded-xl bg-slate-950 border border-emerald-500/30 space-y-2">
-                <span className="text-xs font-semibold text-emerald-400 block">
+              <div className="p-3.5 rounded-xl bg-[#faf7ee] border border-[#1e3a8a]/20 space-y-2">
+                <span className="text-xs font-bold text-[#172554] block">
                   Prism Wholesale (Seller A)
                 </span>
-                <p className="text-slate-300 text-[11px] leading-relaxed">
+                <p className="text-[#1e3a8a] text-[11px] leading-relaxed">
                   <strong>Objective:</strong> High inventory turnover and volume lock-in. Concedes on price down to 10% gross margin with 40h standard fulfillment.
                 </p>
-                <div className="text-[10px] font-mono text-slate-400 pt-1 border-t border-slate-900">
+                <div className="text-[10px] font-mono text-[#172554] pt-1 border-t border-[#1e3a8a]/15 font-bold">
                   Floor Price: ₹3,500 | Min Margin: 10%
                 </div>
               </div>
 
-              <div className="p-3.5 rounded-xl bg-slate-950 border border-blue-500/30 space-y-2">
-                <span className="text-xs font-semibold text-blue-400 block">
+              <div className="p-3.5 rounded-xl bg-[#faf7ee] border border-[#1e3a8a]/20 space-y-2">
+                <span className="text-xs font-bold text-[#172554] block">
                   SwiftQuality (Seller B)
                 </span>
-                <p className="text-slate-300 text-[11px] leading-relaxed">
+                <p className="text-[#1e3a8a] text-[11px] leading-relaxed">
                   <strong>Objective:</strong> Premium positioning. Defends higher margins (18-25%) by offering 20-hour rapid dispatch and 3-year enterprise warranties.
                 </p>
-                <div className="text-[10px] font-mono text-slate-400 pt-1 border-t border-slate-900">
+                <div className="text-[10px] font-mono text-[#172554] pt-1 border-t border-[#1e3a8a]/15 font-bold">
                   Floor Price: ₹3,950 | Min Margin: 18%
                 </div>
               </div>
 
-              <div className="p-3.5 rounded-xl bg-slate-950 border border-rose-900/50 space-y-2">
-                <span className="text-xs font-semibold text-rose-400 block">
+              <div className="p-3.5 rounded-xl bg-[#faf7ee] border border-[#172554]/30 space-y-2">
+                <span className="text-xs font-bold text-[#172554] block">
                   Vortex Trade (Seller C)
                 </span>
-                <p className="text-slate-300 text-[11px] leading-relaxed">
+                <p className="text-[#1e3a8a] text-[11px] leading-relaxed">
                   <strong>Objective:</strong> Adversarial simulation. Tests buyer defenses by quoting artificially low unit rates combined with hidden logistics clearance surcharges.
                 </p>
-                <div className="text-[10px] font-mono text-rose-400 pt-1 border-t border-slate-900">
+                <div className="text-[10px] font-mono text-[#172554] pt-1 border-t border-[#1e3a8a]/15 font-bold">
                   Status: Monitored Threat Simulation
                 </div>
               </div>
@@ -370,7 +361,7 @@ export default function BusinessProfilePage() {
           </Card>
         </div>
 
-        {/* Right Column: Business Memory & Supplier Reliability (4-5 Cols) */}
+        {/* Right Column: Business Memory & Supplier Reliability */}
         <div className="lg:col-span-5 xl:col-span-4 space-y-6">
           {/* Business Memory Insights Card */}
           <Card
@@ -385,30 +376,30 @@ export default function BusinessProfilePage() {
                 return (
                   <div
                     key={policy.id}
-                    className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800 text-xs space-y-2"
+                    className="p-3.5 rounded-xl bg-[#faf7ee] border border-[#1e3a8a]/20 text-xs space-y-2 text-[#172554]"
                   >
                     <div className="flex items-center justify-between">
-                      <span className="font-semibold text-slate-200 text-xs">{policy.title}</span>
+                      <span className="font-bold text-[#172554] text-xs">{policy.title}</span>
                       <StatusBadge status={isAdopted ? 'ACTIVE' : 'PENDING'} size="xs" />
                     </div>
 
-                    <p className="text-[11px] text-slate-400 leading-relaxed">
+                    <p className="text-[11px] text-[#1e3a8a] leading-relaxed">
                       &ldquo;{policy.description}&rdquo;
                     </p>
 
-                    <div className="flex items-center justify-between pt-1 border-t border-slate-900 text-[10px] text-slate-500">
-                      <span className="text-emerald-400 font-mono font-medium">{policy.impactScore}</span>
+                    <div className="flex items-center justify-between pt-1 border-t border-[#1e3a8a]/15 text-[10px]">
+                      <span className="text-[#1d4ed8] font-mono font-bold">{policy.impactScore}</span>
                       {!isAdopted ? (
                         <Button
                           variant="outline"
                           size="xs"
                           onClick={() => handleAdoptPolicy(policy.id)}
-                          className="text-[10px] py-0.5"
+                          className="text-[10px] py-0.5 font-bold"
                         >
                           Adopt Policy
                         </Button>
                       ) : (
-                        <span className="text-indigo-400 font-mono">Enforced</span>
+                        <span className="text-[#172554] font-mono font-bold">Enforced</span>
                       )}
                     </div>
                   </div>
@@ -423,37 +414,37 @@ export default function BusinessProfilePage() {
             subtitle="Business Memory continuous tracking"
             icon={Award}
           >
-            <div className="space-y-3 text-xs">
-              <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1.5">
+            <div className="space-y-3 text-xs text-[#172554]">
+              <div className="p-3 rounded-xl bg-[#faf7ee] border border-[#1e3a8a]/20 space-y-1.5">
                 <div className="flex justify-between items-center">
-                  <span className="font-medium text-slate-200">Prism Wholesale Direct</span>
-                  <span className="font-mono text-emerald-400 font-bold">92 / 100</span>
+                  <span className="font-bold text-[#172554]">Prism Wholesale Direct</span>
+                  <span className="font-mono text-[#1d4ed8] font-bold">92 / 100</span>
                 </div>
-                <div className="flex justify-between text-[11px] text-slate-400">
+                <div className="flex justify-between text-[11px] text-[#1e3a8a]">
                   <span>On-Time: 94.2%</span>
                   <span>Disputes: 0</span>
                   <span>Quality: 88%</span>
                 </div>
               </div>
 
-              <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1.5">
+              <div className="p-3 rounded-xl bg-[#faf7ee] border border-[#1e3a8a]/20 space-y-1.5">
                 <div className="flex justify-between items-center">
-                  <span className="font-medium text-slate-200">SwiftQuality Logistics</span>
-                  <span className="font-mono text-emerald-400 font-bold">98 / 100</span>
+                  <span className="font-bold text-[#172554]">SwiftQuality Logistics</span>
+                  <span className="font-mono text-[#1d4ed8] font-bold">98 / 100</span>
                 </div>
-                <div className="flex justify-between text-[11px] text-slate-400">
+                <div className="flex justify-between text-[11px] text-[#1e3a8a]">
                   <span>On-Time: 99.4%</span>
                   <span>Disputes: 0</span>
                   <span>Quality: 98%</span>
                 </div>
               </div>
 
-              <div className="p-3 rounded-xl bg-slate-950 border border-rose-900/40 space-y-1.5">
+              <div className="p-3 rounded-xl bg-[#faf7ee] border border-[#172554]/30 space-y-1.5">
                 <div className="flex justify-between items-center">
-                  <span className="font-medium text-rose-300">Vortex Dynamic Trade (Agent C)</span>
-                  <span className="font-mono text-rose-400 font-bold">38 / 100</span>
+                  <span className="font-bold text-[#172554]">Vortex Dynamic Trade (Agent C)</span>
+                  <span className="font-mono text-[#172554] font-bold">38 / 100</span>
                 </div>
-                <div className="flex justify-between text-[11px] text-rose-400">
+                <div className="flex justify-between text-[11px] text-[#1e3a8a]">
                   <span>On-Time: 40.0%</span>
                   <span>Disputes: 4</span>
                   <span>Anomalies: 9</span>

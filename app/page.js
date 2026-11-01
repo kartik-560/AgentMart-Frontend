@@ -13,6 +13,7 @@ import { securityService, productService } from '../services/agentService';
 import { transactionService } from '../services/transactionService';
 import { useBusiness } from '../context/BusinessContext';
 import { useUI } from '../context/UIContext';
+import { useAuth } from '../context/AuthContext';
 import { formatINR } from '../utils/formatters';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -32,7 +33,18 @@ export default function DashboardPage() {
   const router = useRouter();
   const { showToast } = useUI();
   const { profile } = useBusiness();
+  const { isSeller, isAuthenticated, isLoading } = useAuth();
   const [negotiations, setNegotiations] = useState([]);
+
+  useEffect(() => {
+    if (!isLoading) {
+      if (!isAuthenticated) {
+        router.replace('/login');
+      } else if (isSeller) {
+        router.replace('/seller/dashboard');
+      }
+    }
+  }, [isAuthenticated, isSeller, isLoading, router]);
   const [transactions, setTransactions] = useState([]);
   const [alerts, setAlerts] = useState([]);
   const [products, setProducts] = useState([]);
@@ -42,7 +54,7 @@ export default function DashboardPage() {
   const [isRfqModalOpen, setIsRfqModalOpen] = useState(false);
   const [rfqSku, setRfqSku] = useState('ELEC-RT-001');
   const [rfqQuantity, setRfqQuantity] = useState(12);
-  const [rfqBudget, setRfqBudget] = useState(profile?.budgetLimit || 50000);
+  const [rfqBudget, setRfqBudget] = useState(25000);
   const [creatingRfq, setCreatingRfq] = useState(false);
 
   useEffect(() => {
@@ -57,7 +69,14 @@ export default function DashboardPage() {
         setNegotiations(negRes?.data || []);
         setTransactions(txRes?.data || []);
         setAlerts(secRes?.data || []);
-        setProducts(prodRes?.data?.products || []);
+        const prods = prodRes?.data?.products || [];
+        setProducts(prods);
+        if (prods.length > 0) {
+          const firstProd = prods.find((p) => p.sku === rfqSku) || prods[0];
+          setRfqSku(firstProd.sku);
+          const unitCost = Number(firstProd.baseCostPrice || 2500);
+          setRfqBudget(Math.round(unitCost * 12 * 1.1));
+        }
         setLoading(false);
       }
     });
@@ -67,10 +86,40 @@ export default function DashboardPage() {
     };
   }, []);
 
+  const handleSkuChange = (sku) => {
+    setRfqSku(sku);
+    const prod = products.find((p) => p.sku === sku);
+    if (prod) {
+      const unitCost = Number(prod.baseCostPrice || 2500);
+      setRfqBudget(Math.round(unitCost * Number(rfqQuantity || 12) * 1.1));
+    }
+  };
+
+  const handleQuantityChange = (qty) => {
+    setRfqQuantity(qty);
+    const prod = products.find((p) => p.sku === rfqSku) || products[0];
+    const unitCost = Number(prod?.baseCostPrice || 2500);
+    setRfqBudget(Math.round(unitCost * Number(qty || 0) * 1.1));
+  };
+
+  const handleOpenRfqModal = () => {
+    const targetSku = rfqSku || products[0]?.sku || 'ELEC-RT-001';
+    const prod = products.find((p) => p.sku === targetSku) || products[0];
+    const qty = 12;
+    setRfqSku(targetSku);
+    setRfqQuantity(qty);
+    if (prod) {
+      const unitCost = Number(prod.baseCostPrice || 2500);
+      setRfqBudget(Math.round(unitCost * qty * 1.1));
+    }
+    setIsRfqModalOpen(true);
+  };
+
   const pendingDeals = transactions.filter((t) => t.settlementStatus === 'PENDING_APPROVAL');
   const settledTotalSpend = transactions
     .filter((t) => t.settlementStatus === 'SETTLED')
     .reduce((acc, t) => acc + Number(t.settlementAmount || 0), 0);
+  const activeNegotiations = negotiations.filter((n) => n.status !== 'APPROVED' && n.status !== 'SETTLED');
 
   const handleLaunchRfq = async (e) => {
     e.preventDefault();
@@ -99,41 +148,42 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Top Banner */}
-      <div className="p-6 rounded-2xl bg-gradient-to-r from-indigo-950/80 via-slate-900 to-slate-950 border border-indigo-900/50 flex flex-col md:flex-row items-start md:items-center justify-between gap-5 shadow-xl">
-        <div className="space-y-1.5 max-w-3xl">
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-xs font-mono font-medium">
-            <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
-            Autonomous B2B Multi-Agent Engine (Gemini 2.0)
+    <div className="space-y-4">
+      {/* Top Banner - Compact Solid Royal Blue & Light Cream */}
+      <div className="px-4 py-3 sm:px-5 sm:py-3.5 rounded-xl bg-[#fffdf9] border border-[#1e3a8a]/20 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 shadow-xs text-[#172554]">
+        <div className="space-y-0.5 max-w-3xl">
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="text-lg sm:text-xl font-black text-[#172554] tracking-tight">
+              Procurement Operations Command Center
+            </h1>
+            <span className="inline-flex items-center px-2 py-0.5 rounded bg-[#f4efe3] border border-[#1e3a8a]/25 text-[#1e3a8a] text-[10px] font-mono font-bold uppercase tracking-wider">
+              Autonomous B2B Protocol
+            </span>
           </div>
-          <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
-            Procurement Operations Command Center
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-            Autonomous buyer and seller agents conduct multi-attribute commercial negotiations governed by deterministic financial boundaries and mandatory human sign-off.
+          <p className="text-xs text-[#1e3a8a]/80 leading-normal">
+            Autonomous buyer and seller agents conduct multi-attribute commercial negotiations governed by deterministic financial boundaries.
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5 shrink-0 w-full sm:w-auto">
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
           <Button
-            variant="outline"
+            variant="primary"
             size="sm"
-            onClick={() => setIsRfqModalOpen(true)}
-            className="gap-1.5 text-xs"
+            onClick={handleOpenRfqModal}
+            className="gap-1.5 text-xs font-bold py-1.5 px-3"
           >
             <PlusCircle className="w-3.5 h-3.5" /> Launch New RFQ
           </Button>
 
           {pendingDeals.length > 0 ? (
             <Link href={`/approvals?id=${pendingDeals[0].id}`}>
-              <Button variant="success" size="sm" className="gap-1.5 text-xs shadow-emerald-500/20 shadow-md">
+              <Button variant="secondary" size="sm" className="gap-1.5 text-xs font-bold py-1.5 px-3">
                 <ShieldCheck className="w-3.5 h-3.5" /> {pendingDeals.length} Deal{pendingDeals.length > 1 ? 's' : ''} Pending Approval
               </Button>
             </Link>
           ) : (
             <Link href="/approvals">
-              <Button variant="outline" size="sm" className="gap-1.5 text-xs text-slate-400">
+              <Button variant="outline" size="sm" className="gap-1.5 text-xs text-[#1e3a8a] py-1.5 px-3">
                 <ShieldCheck className="w-3.5 h-3.5" /> 0 Pending Approvals
               </Button>
             </Link>
@@ -154,27 +204,34 @@ export default function DashboardPage() {
       <BudgetAllocationBar currentTotal={settledTotalSpend} budgetCap={profile?.budgetLimit || 50000} />
 
       {/* 2-Column Split: Active Negotiations & Intercepted Threats */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ActiveNegotiationsWidget negotiations={negotiations} />
-        <RecentAlertsWidget alerts={alerts} />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+        <ActiveNegotiationsWidget
+          negotiations={activeNegotiations}
+          loading={loading}
+          onOpenRfqModal={handleOpenRfqModal}
+        />
+        <RecentAlertsWidget
+          alerts={alerts}
+          loading={loading}
+        />
       </div>
 
       {/* Quick Launch RFQ Modal */}
       <Modal
         isOpen={isRfqModalOpen}
         onClose={() => setIsRfqModalOpen(false)}
-        title="Launch Autonomous Procurement Negotiation"
+        title="Launch Autonomous RFQ Session"
         subtitle="Broadcast RFQ to competing supplier agents"
       >
         <form onSubmit={handleLaunchRfq} className="space-y-4 text-xs">
           <div>
-            <label className="block text-xs font-medium text-slate-300 mb-1">
+            <label className="block text-xs font-semibold text-[#172554] mb-1">
               Select Target Product SKU
             </label>
             <select
               value={rfqSku}
-              onChange={(e) => setRfqSku(e.target.value)}
-              className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-slate-100 text-xs focus:outline-none focus:border-indigo-500"
+              onChange={(e) => handleSkuChange(e.target.value)}
+              className="w-full px-3 py-2 bg-[#fffdf9] border border-[#1e3a8a]/30 rounded-lg text-[#172554] text-xs focus:outline-none focus:border-[#1d4ed8]"
             >
               {products.map((p) => (
                 <option key={p.id || p.sku} value={p.sku}>
@@ -186,7 +243,7 @@ export default function DashboardPage() {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1">
+              <label className="block text-xs font-semibold text-[#172554] mb-1">
                 Target Quantity (Units)
               </label>
               <input
@@ -194,27 +251,32 @@ export default function DashboardPage() {
                 min="1"
                 max="500"
                 value={rfqQuantity}
-                onChange={(e) => setRfqQuantity(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-slate-100 text-xs focus:outline-none focus:border-indigo-500 font-mono"
+                onChange={(e) => handleQuantityChange(e.target.value)}
+                className="w-full px-3 py-2 bg-[#fffdf9] border border-[#1e3a8a]/30 rounded-lg text-[#172554] text-xs focus:outline-none focus:border-[#1d4ed8] font-mono"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1">
-                Max Budget Cap (INR)
+              <label className="block text-xs font-semibold text-[#172554] mb-1">
+                Budget Ceiling (INR)
               </label>
               <input
                 type="number"
-                
                 value={rfqBudget}
                 onChange={(e) => setRfqBudget(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-emerald-400 text-xs font-mono font-bold focus:outline-none focus:border-indigo-500"
+                className="w-full px-3 py-2 bg-[#fffdf9] border border-[#1e3a8a]/30 rounded-lg text-[#1d4ed8] text-xs font-mono font-bold focus:outline-none focus:border-[#1d4ed8]"
               />
-              <span className="text-[10px] text-emerald-400">Unrestricted Budget</span>
+              <span className="text-[10px] text-[#1e3a8a]">
+                {Number(rfqBudget) > (profile?.budgetLimit || 50000) ? (
+                  <span className="text-[#172554] font-semibold">Exceeds Enterprise Cap ({formatINR(profile?.budgetLimit || 50000)})</span>
+                ) : (
+                  <span>+10% buffer included • Within Enterprise Cap</span>
+                )}
+              </span>
             </div>
           </div>
 
-          <div className="p-3 rounded-lg bg-indigo-950/30 border border-indigo-900/40 text-slate-300 text-[11px] leading-relaxed">
-            <strong>Orchestration Protocol:</strong> The autonomous buyer agent will solicit quotes from Prism Wholesale (Agent A), SwiftQuality (Agent B), and monitor ShadowBot (Agent C) through zero-trust filters.
+          <div className="p-3 rounded-lg bg-[#f4efe3] border border-[#1e3a8a]/20 text-[#172554] text-[11px] leading-relaxed">
+            <strong>Autonomous Multi-Agent Handshake:</strong> Upon broadcast, Buyer Agent will solicit bids simultaneously from Seller A (Wholesale Price), Seller B (Express SLA), and scan Seller C through Zero-Trust filters.
           </div>
 
           <div className="pt-2 flex justify-end gap-2">

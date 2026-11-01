@@ -200,10 +200,10 @@ function OfferComparisonContent() {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-100 flex items-center gap-2">
-            <Scale className="w-6 h-6 text-indigo-400 shrink-0" /> Multi-Attribute Offer Comparison Matrix
+          <h1 className="text-xl sm:text-2xl font-bold text-[#172554] flex items-center gap-2">
+            <Scale className="w-6 h-6 text-[#1d4ed8] shrink-0" /> Multi-Attribute Offer Comparison Matrix
           </h1>
-          <p className="text-xs sm:text-sm text-slate-400 mt-1">
+          <p className="text-xs sm:text-sm text-[#1e3a8a] mt-1">
             Side-by-side evaluation across competing supplier quotes, utility formulas, and safety boundaries.
           </p>
         </div>
@@ -214,11 +214,11 @@ function OfferComparisonContent() {
           </Button>
 
           <Button
-            variant="success"
+            variant="primary"
             size="sm"
             onClick={handleProceedToApproval}
             loading={proceeding}
-            className="gap-2 text-xs shadow-emerald-500/20 shadow-md"
+            className="gap-2 text-xs shadow-xs"
           >
             <ShieldCheck className="w-4 h-4" /> Proceed to Human Approval
           </Button>
@@ -233,29 +233,29 @@ function OfferComparisonContent() {
         const savings = Math.max(0, budgetCap - totalQuote);
 
         return (
-          <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-emerald-950/40 via-slate-900 to-indigo-950/40 border border-emerald-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-lg">
+          <div className="p-4 sm:p-5 rounded-2xl bg-[#fffdf9] border-2 border-[#1d4ed8] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs text-[#172554]">
             <div className="flex items-start sm:items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shrink-0">
+              <div className="p-2.5 rounded-xl bg-[#f4efe3] text-[#1d4ed8] border border-[#1e3a8a]/20 shrink-0">
                 <CheckCircle2 className="w-5 h-5" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h4 className="text-sm sm:text-base font-bold text-emerald-300">
+                  <h4 className="text-sm sm:text-base font-bold text-[#172554]">
                     Optimal Recommendation: {comparison?.recommendationSummary?.sellerName || recommendedOffer?.sellerName || 'Prism Wholesale Direct'}
                   </h4>
-                  <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 text-[10px] font-mono font-bold">
+                  <span className="px-2 py-0.5 rounded-full bg-[#f4efe3] text-[#1d4ed8] border border-[#1e3a8a]/20 text-[10px] font-mono font-bold">
                     RECOMMENDED
                   </span>
                 </div>
-                <p className="text-xs text-slate-300 mt-1 max-w-3xl leading-relaxed">
+                <p className="text-xs text-[#1e3a8a] mt-1 max-w-3xl leading-relaxed">
                   {comparison?.recommendationSummary?.reasoning ||
                     `Highest combined utility score (${getOfferScore(recommendedOffer)}/100) with ${formatINR(totalQuote)} total commitment (${formatINR(savings)} below budget cap), ${recommendedOffer?.deliveryHours || 40}h delivery, and ${recommendedOffer?.resaleMarginProjected || 24.5}% projected resale margin.`}
                 </p>
               </div>
             </div>
             <div className="text-right shrink-0">
-              <span className="text-[11px] text-slate-400 block font-mono">Total Quote</span>
-              <span className="font-mono text-2xl font-bold text-emerald-400">{formatINR(totalQuote)}</span>
+              <span className="text-[11px] text-[#1e3a8a] block font-mono">Total Quote</span>
+              <span className="font-mono text-2xl font-bold text-[#1d4ed8]">{formatINR(totalQuote)}</span>
             </div>
           </div>
         );
@@ -263,64 +263,58 @@ function OfferComparisonContent() {
 
       {/* Side-by-Side Comparison Matrix Table */}
       <Card title="Supplier Evaluation Matrix" subtitle="Strict deterministic validation across all criteria">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto text-[#172554]">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b border-slate-800 text-slate-400">
-                <th className="py-3.5 px-4 font-semibold">Evaluation Criterion</th>
+              <tr className="border-b border-[#1e3a8a]/20 bg-[#f4efe3] text-[#172554]">
+                <th className="py-3.5 px-4 font-bold">Evaluation Criterion</th>
                 {offers.map((offer, idx) => {
                   const isRec = offer.isRecommended;
-                  const isFlagged = offer.securityStatus !== 'CLEAN';
-                  const colorClass = isRec
-                    ? 'text-emerald-400 bg-emerald-950/10'
-                    : isFlagged
-                    ? 'text-rose-400 bg-rose-950/10'
-                    : 'text-blue-400 bg-blue-950/10';
                   return (
-                    <th key={offer.id || idx} className={`py-3.5 px-4 font-semibold ${colorClass}`}>
+                    <th key={offer.id || idx} className={`py-3.5 px-4 font-bold ${isRec ? 'text-[#1d4ed8] bg-[#f4efe3]' : 'text-[#172554]'}`}>
                       {offer.sellerName || offer.name || `Seller ${String.fromCharCode(65 + idx)}`}
-                      {isRec && <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300">RECOMMENDED</span>}
+                      {isRec && <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded bg-[#1d4ed8] text-[#faf7ee] font-bold">RECOMMENDED</span>}
                     </th>
                   );
                 })}
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/70 font-mono text-slate-200">
-              <tr className="hover:bg-slate-900/40">
-                <td className="py-3 px-4 font-sans text-slate-400 font-medium">Bidding Strategy</td>
+            <tbody className="divide-y divide-[#1e3a8a]/15 font-mono text-[#172554]">
+              <tr className="hover:bg-[#faf7ee]">
+                <td className="py-3 px-4 font-sans text-[#1e3a8a] font-bold">Bidding Strategy</td>
                 {offers.map((offer, idx) => (
-                  <td key={idx} className={`py-3 px-4 ${offer.isRecommended ? 'bg-emerald-950/5' : ''}`}>
+                  <td key={idx} className={`py-3 px-4 ${offer.isRecommended ? 'bg-[#f4efe3]/40 font-bold' : ''}`}>
                     {offer.strategy || 'Wholesale Supply'}
                   </td>
                 ))}
               </tr>
-              <tr className="hover:bg-slate-900/40">
-                <td className="py-3 px-4 font-sans text-slate-400 font-medium">Offered Unit Rate</td>
+              <tr className="hover:bg-[#faf7ee]">
+                <td className="py-3 px-4 font-sans text-[#1e3a8a] font-bold">Offered Unit Rate</td>
                 {offers.map((offer, idx) => (
-                  <td key={idx} className={`py-3 px-4 font-bold ${offer.isRecommended ? 'text-emerald-400 bg-emerald-950/5' : offer.securityStatus !== 'CLEAN' ? 'text-rose-400 line-through' : 'text-blue-400'}`}>
+                  <td key={idx} className={`py-3 px-4 font-bold ${offer.isRecommended ? 'text-[#1d4ed8] bg-[#f4efe3]/40' : offer.securityStatus !== 'CLEAN' ? 'text-[#172554] line-through' : 'text-[#172554]'}`}>
                     {formatINR(offer.unitPrice)}
                   </td>
                 ))}
               </tr>
-              <tr className="hover:bg-slate-900/40">
-                <td className="py-3 px-4 font-sans text-slate-400 font-medium">Total Price ({offers[0]?.quantity || 1} Units)</td>
+              <tr className="hover:bg-[#faf7ee]">
+                <td className="py-3 px-4 font-sans text-[#1e3a8a] font-bold">Total Price ({offers[0]?.quantity || 1} Units)</td>
                 {offers.map((offer, idx) => (
-                  <td key={idx} className={`py-3 px-4 font-bold text-sm ${offer.isRecommended ? 'text-emerald-400 bg-emerald-950/5' : offer.securityStatus !== 'CLEAN' ? 'text-rose-400' : 'text-blue-400'}`}>
+                  <td key={idx} className={`py-3 px-4 font-bold text-sm ${offer.isRecommended ? 'text-[#1d4ed8] bg-[#f4efe3]/40' : 'text-[#172554]'}`}>
                     {formatINR(offer.totalPrice)} {offer.securityStatus !== 'CLEAN' ? '*' : ''}
                   </td>
                 ))}
               </tr>
-              <tr className="hover:bg-slate-900/40">
+              <tr className="hover:bg-[#faf7ee]">
                 {(() => {
                   const budgetCap = comparison?.constraints?.maxBudget || 50000;
                   return (
                     <>
-                      <td className="py-3 px-4 font-sans text-slate-400 font-medium">Budget Check ({'<='} {formatINR(budgetCap)})</td>
+                      <td className="py-3 px-4 font-sans text-[#1e3a8a] font-bold">Budget Check ({'<='} {formatINR(budgetCap)})</td>
                       {offers.map((offer, idx) => {
                         const diff = budgetCap - offer.totalPrice;
                         const passes = diff >= 0 && offer.withinBudget !== false;
                         return (
-                          <td key={idx} className={`py-3 px-4 font-medium ${passes ? 'text-emerald-400 bg-emerald-950/5' : 'text-rose-400 font-bold bg-rose-950/5'}`}>
+                          <td key={idx} className={`py-3 px-4 font-bold ${passes ? 'text-[#1d4ed8] bg-[#f4efe3]/40' : 'text-[#172554]'}`}>
                             {passes ? `✓ PASS (${formatINR(diff)} buffer)` : `✗ BREACH (+${formatINR(Math.abs(diff))} over)`}
                           </td>
                         );
@@ -329,56 +323,56 @@ function OfferComparisonContent() {
                   );
                 })()}
               </tr>
-              <tr className="hover:bg-slate-900/40">
-                <td className="py-3 px-4 font-sans text-slate-400 font-medium">Fulfillment SLA Lead Time</td>
+              <tr className="hover:bg-[#faf7ee]">
+                <td className="py-3 px-4 font-sans text-[#1e3a8a] font-bold">Fulfillment SLA Lead Time</td>
                 {offers.map((offer, idx) => (
-                  <td key={idx} className={`py-3 px-4 ${offer.isRecommended ? 'text-emerald-400 bg-emerald-950/5' : 'text-slate-300'}`}>
+                  <td key={idx} className={`py-3 px-4 ${offer.isRecommended ? 'text-[#1d4ed8] bg-[#f4efe3]/40 font-bold' : 'text-[#172554]'}`}>
                     {offer.deliveryHours} Hours {offer.withinSla ? '(Passes SLA)' : '(Breaches SLA)'}
                   </td>
                 ))}
               </tr>
-              <tr className="hover:bg-slate-900/40">
-                <td className="py-3 px-4 font-sans text-slate-400 font-medium">Build Quality & Warranty</td>
+              <tr className="hover:bg-[#faf7ee]">
+                <td className="py-3 px-4 font-sans text-[#1e3a8a] font-bold">Build Quality & Warranty</td>
                 {offers.map((offer, idx) => (
-                  <td key={idx} className={`py-3 px-4 ${offer.isRecommended ? 'text-emerald-400 bg-emerald-950/5' : 'text-slate-300'}`}>
+                  <td key={idx} className={`py-3 px-4 ${offer.isRecommended ? 'text-[#1d4ed8] bg-[#f4efe3]/40 font-bold' : 'text-[#172554]'}`}>
                     {offer.qualityGrade || 'Enterprise'}
                   </td>
                 ))}
               </tr>
-              <tr className="hover:bg-slate-900/40">
-                <td className="py-3 px-4 font-sans text-slate-400 font-medium">Projected Resale Margin</td>
+              <tr className="hover:bg-[#faf7ee]">
+                <td className="py-3 px-4 font-sans text-[#1e3a8a] font-bold">Projected Resale Margin</td>
                 {offers.map((offer, idx) => (
-                  <td key={idx} className={`py-3 px-4 ${offer.isRecommended ? 'text-emerald-400 font-bold bg-emerald-950/5' : 'text-slate-300'}`}>
+                  <td key={idx} className={`py-3 px-4 ${offer.isRecommended ? 'text-[#1d4ed8] font-bold bg-[#f4efe3]/40' : 'text-[#172554]'}`}>
                     {Number(offer.resaleMarginProjected || 0).toFixed(2)}%
                   </td>
                 ))}
               </tr>
-              <tr className="hover:bg-slate-900/40">
-                <td className="py-3 px-4 font-sans text-slate-400 font-medium">Zero-Trust Inspection</td>
+              <tr className="hover:bg-[#faf7ee]">
+                <td className="py-3 px-4 font-sans text-[#1e3a8a] font-bold">Zero-Trust Inspection</td>
                 {offers.map((offer, idx) => (
-                  <td key={idx} className={`py-3 px-4 ${offer.securityStatus === 'CLEAN' ? 'text-emerald-400 bg-emerald-950/5' : 'text-rose-400 font-bold bg-rose-950/5'}`}>
+                  <td key={idx} className={`py-3 px-4 font-bold ${offer.securityStatus === 'CLEAN' ? 'text-[#1d4ed8] bg-[#f4efe3]/40' : 'text-[#172554]'}`}>
                     {offer.securityStatus === 'CLEAN' ? 'PASSED / VERIFIED' : offer.flagReason || 'FLAGGED: Suspicious terms'}
                   </td>
                 ))}
               </tr>
-              <tr className="bg-slate-950/80">
-                <td className="py-4 px-4 font-sans font-bold text-slate-100">Deterministic Utility Score</td>
+              <tr className="bg-[#f4efe3]">
+                <td className="py-4 px-4 font-sans font-black text-[#172554]">Deterministic Utility Score</td>
                 {offers.map((offer, idx) => (
-                  <td key={idx} className={`py-4 px-4 font-bold text-base ${offer.isRecommended ? 'text-emerald-400 bg-emerald-950/20' : offer.securityStatus !== 'CLEAN' ? 'text-rose-400 bg-rose-950/20' : 'text-blue-400 bg-blue-950/20'}`}>
+                  <td key={idx} className={`py-4 px-4 font-black text-base ${offer.isRecommended ? 'text-[#1d4ed8] bg-[#f4efe3]' : 'text-[#172554]'}`}>
                     {getOfferScore(offer)} / 100
                   </td>
                 ))}
               </tr>
-              <tr className="hover:bg-slate-900/40">
-                <td className="py-3.5 px-4 font-sans font-medium text-slate-300">Authorize Selected Deal</td>
+              <tr className="hover:bg-[#faf7ee]">
+                <td className="py-3.5 px-4 font-sans font-bold text-[#172554]">Authorize Selected Deal</td>
                 {offers.map((offer, idx) => (
                   <td key={idx} className="py-3.5 px-4">
                     <Button
-                      variant={offer.isRecommended ? 'success' : 'outline'}
+                      variant={offer.isRecommended ? 'primary' : 'outline'}
                       size="xs"
                       onClick={() => handleProceedToApproval(offer)}
                       disabled={proceeding || offer.securityStatus !== 'CLEAN'}
-                      className="w-full text-[11px] gap-1.5 shadow-sm"
+                      className="w-full text-[11px] gap-1.5 font-bold shadow-xs"
                     >
                       <CheckCircle2 className="w-3.5 h-3.5" />
                       {offer.isRecommended ? 'Approve Optimal Deal' : `Select Deal (${formatINR(offer.totalPrice)})`}
@@ -398,11 +392,11 @@ function OfferComparisonContent() {
           title="Interactive Weight Tuning Simulator"
           subtitle="Adjust criteria weights to evaluate sensitivity of the utility function"
         >
-          <div className="space-y-3.5 text-xs">
+          <div className="space-y-3.5 text-xs text-[#172554]">
             <div>
               <div className="flex justify-between mb-1">
-                <span className="text-slate-300 font-medium">Price Weight: {weights.price}%</span>
-                <span className="font-mono text-emerald-400">{weights.price}%</span>
+                <span className="text-[#172554] font-bold">Price Weight: {weights.price}%</span>
+                <span className="font-mono text-[#1d4ed8] font-bold">{weights.price}%</span>
               </div>
               <input
                 type="range"
@@ -410,14 +404,14 @@ function OfferComparisonContent() {
                 max="60"
                 value={weights.price}
                 onChange={(e) => setWeights({ ...weights, price: Number(e.target.value) })}
-                className="w-full h-1.5 bg-slate-950 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+                className="w-full h-1.5 bg-[#f4efe3] rounded-lg appearance-none cursor-pointer accent-[#1d4ed8]"
               />
             </div>
 
             <div>
               <div className="flex justify-between mb-1">
-                <span className="text-slate-300 font-medium">Delivery SLA Weight: {weights.delivery}%</span>
-                <span className="font-mono text-blue-400">{weights.delivery}%</span>
+                <span className="text-[#172554] font-bold">Delivery SLA Weight: {weights.delivery}%</span>
+                <span className="font-mono text-[#1d4ed8] font-bold">{weights.delivery}%</span>
               </div>
               <input
                 type="range"
@@ -425,14 +419,14 @@ function OfferComparisonContent() {
                 max="50"
                 value={weights.delivery}
                 onChange={(e) => setWeights({ ...weights, delivery: Number(e.target.value) })}
-                className="w-full h-1.5 bg-slate-950 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                className="w-full h-1.5 bg-[#f4efe3] rounded-lg appearance-none cursor-pointer accent-[#1d4ed8]"
               />
             </div>
 
             <div>
               <div className="flex justify-between mb-1">
-                <span className="text-slate-300 font-medium">Quality & Warranty Weight: {weights.quality}%</span>
-                <span className="font-mono text-indigo-400">{weights.quality}%</span>
+                <span className="text-[#172554] font-bold">Quality & Warranty Weight: {weights.quality}%</span>
+                <span className="font-mono text-[#1d4ed8] font-bold">{weights.quality}%</span>
               </div>
               <input
                 type="range"
@@ -440,14 +434,14 @@ function OfferComparisonContent() {
                 max="40"
                 value={weights.quality}
                 onChange={(e) => setWeights({ ...weights, quality: Number(e.target.value) })}
-                className="w-full h-1.5 bg-slate-950 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                className="w-full h-1.5 bg-[#f4efe3] rounded-lg appearance-none cursor-pointer accent-[#1d4ed8]"
               />
             </div>
 
             <div>
               <div className="flex justify-between mb-1">
-                <span className="text-slate-300 font-medium">Supplier Reliability Weight: {weights.reliability}%</span>
-                <span className="font-mono text-amber-400">{weights.reliability}%</span>
+                <span className="text-[#172554] font-bold">Supplier Reliability Weight: {weights.reliability}%</span>
+                <span className="font-mono text-[#1d4ed8] font-bold">{weights.reliability}%</span>
               </div>
               <input
                 type="range"
@@ -455,7 +449,7 @@ function OfferComparisonContent() {
                 max="30"
                 value={weights.reliability}
                 onChange={(e) => setWeights({ ...weights, reliability: Number(e.target.value) })}
-                className="w-full h-1.5 bg-slate-950 rounded-lg appearance-none cursor-pointer accent-amber-500"
+                className="w-full h-1.5 bg-[#f4efe3] rounded-lg appearance-none cursor-pointer accent-[#1d4ed8]"
               />
             </div>
 
@@ -464,7 +458,7 @@ function OfferComparisonContent() {
                 variant="outline"
                 size="xs"
                 onClick={() => setWeights({ price: 40, delivery: 25, quality: 20, reliability: 15 })}
-                className="text-slate-400"
+                className="text-[#172554] font-bold"
               >
                 Reset Default Weights (40/25/20/15)
               </Button>
@@ -486,7 +480,7 @@ function OfferComparisonContent() {
 
 export default function OfferComparisonPage() {
   return (
-    <React.Suspense fallback={<div className="p-8 text-slate-500 font-mono text-xs text-center">Loading Offer Comparison...</div>}>
+    <React.Suspense fallback={<div className="p-8 text-[#1e3a8a] font-mono text-xs text-center">Loading Offer Comparison...</div>}>
       <OfferComparisonContent />
     </React.Suspense>
   );
